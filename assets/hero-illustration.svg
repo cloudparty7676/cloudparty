@@ -1,0 +1,230 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" fill="none" role="img" aria-label="CloudParty hero illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F6FBFF"/>
+      <stop offset="0.45" stop-color="#EAF4FF"/>
+      <stop offset="1" stop-color="#DDF0FF"/>
+    </linearGradient>
+
+    <radialGradient id="glowBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(930 170) rotate(135) scale(320 320)">
+      <stop offset="0" stop-color="#3AA0FF" stop-opacity="0.36"/>
+      <stop offset="0.55" stop-color="#3AA0FF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#3AA0FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glowMint" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(250 560) rotate(135) scale(360 360)">
+      <stop offset="0" stop-color="#4FF0C8" stop-opacity="0.22"/>
+      <stop offset="0.6" stop-color="#4FF0C8" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#4FF0C8" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.74"/>
+    </linearGradient>
+
+    <linearGradient id="stream" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#3AA0FF" stop-opacity="0"/>
+      <stop offset="0.25" stop-color="#3AA0FF" stop-opacity="0.35"/>
+      <stop offset="0.55" stop-color="#4FF0C8" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#4FF0C8" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#1250AA" flood-opacity="0.14"/>
+    </filter>
+
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+
+    <filter id="cloud" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#1F6AD9" flood-opacity="0.10"/>
+    </filter>
+
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" stroke="#2B7BEA" stroke-opacity="0.08" stroke-width="1"/>
+    </pattern>
+
+    <linearGradient id="lane" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#3AA0FF" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#3AA0FF" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#3AA0FF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#3AA0FF" stop-opacity="0.45"/>
+    </linearGradient>
+
+    <linearGradient id="bar2" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#4FF0C8" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#4FF0C8" stop-opacity="0.44"/>
+    </linearGradient>
+
+    <style>
+      .strokeSoft{stroke:#2378E6;stroke-opacity:.16}
+      .strokeSofter{stroke:#2378E6;stroke-opacity:.12}
+      .text{font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Helvetica, Arial;}
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="700" fill="url(#bg)"/>
+  <rect width="1200" height="700" fill="url(#grid)" opacity="0.55"/>
+  <circle cx="930" cy="170" r="320" fill="url(#glowBlue)"/>
+  <circle cx="250" cy="560" r="360" fill="url(#glowMint)"/>
+
+  <!-- Floating soft blobs -->
+  <g filter="url(#blur)" opacity="0.55">
+    <path d="M1000 95C1075 70 1155 110 1168 170C1182 234 1120 275 1050 290C980 305 910 280 892 222C873 164 925 120 1000 95Z" fill="#3AA0FF" fill-opacity="0.14"/>
+    <path d="M110 430C175 390 255 410 286 470C318 535 270 610 196 628C122 646 52 607 36 548C20 489 45 470 110 430Z" fill="#4FF0C8" fill-opacity="0.14"/>
+  </g>
+
+  <!-- Cloud cluster -->
+  <g filter="url(#cloud)">
+    <path d="M250 230c0-46 38-84 84-84 32 0 60 18 74 44 8-3 16-4 25-4 40 0 72 32 72 72 0 5-1 11-2 16 32 5 57 33 57 67 0 38-31 69-69 69H310c-55 0-100-45-100-100 0-31 14-59 40-80Z" fill="#FFFFFF" fill-opacity="0.78"/>
+    <path d="M700 175c0-38 31-69 69-69 26 0 48 14 60 35 6-2 13-3 20-3 33 0 60 27 60 60 0 4-1 9-2 14 26 4 46 26 46 54 0 31-25 56-56 56H760c-45 0-82-37-82-82 0-25 12-48 32-65Z" fill="#FFFFFF" fill-opacity="0.72"/>
+  </g>
+
+  <!-- Data streams -->
+  <g opacity="0.9">
+    <path d="M210 520 C320 440 420 450 520 380 C620 312 690 250 820 250 C950 250 1010 300 1120 240" stroke="url(#stream)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M110 520 C240 470 330 520 450 470 C580 415 650 330 760 320 C900 308 980 360 1080 330" stroke="url(#stream)" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+    <path d="M310 560 C410 520 510 560 600 520 C700 475 760 420 860 410 C980 398 1025 430 1140 410" stroke="url(#stream)" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- Nodes on streams -->
+  <g>
+    <circle cx="520" cy="380" r="8" fill="#3AA0FF" fill-opacity="0.55"/>
+    <circle cx="820" cy="250" r="8" fill="#4FF0C8" fill-opacity="0.55"/>
+    <circle cx="450" cy="470" r="6" fill="#3AA0FF" fill-opacity="0.45"/>
+    <circle cx="760" cy="320" r="6" fill="#4FF0C8" fill-opacity="0.45"/>
+    <circle cx="600" cy="520" r="5" fill="#3AA0FF" fill-opacity="0.35"/>
+    <circle cx="860" cy="410" r="5" fill="#4FF0C8" fill-opacity="0.35"/>
+  </g>
+
+  <!-- Map panel -->
+  <g filter="url(#softShadow)">
+    <rect x="690" y="320" width="440" height="300" rx="26" fill="url(#card)" stroke="#2378E6" stroke-opacity="0.14"/>
+    <rect x="720" y="352" width="380" height="234" rx="20" fill="#FFFFFF" fill-opacity="0.62" stroke="#2378E6" stroke-opacity="0.10"/>
+
+    <!-- Map grid lines -->
+    <g opacity="0.65">
+      <path d="M760 372H1060" class="strokeSofter" stroke-width="2"/>
+      <path d="M760 412H1060" class="strokeSofter" stroke-width="2"/>
+      <path d="M760 452H1060" class="strokeSofter" stroke-width="2"/>
+      <path d="M760 492H1060" class="strokeSofter" stroke-width="2"/>
+      <path d="M760 532H1060" class="strokeSofter" stroke-width="2"/>
+      <path d="M780 362V566" class="strokeSofter" stroke-width="2"/>
+      <path d="M840 362V566" class="strokeSofter" stroke-width="2"/>
+      <path d="M900 362V566" class="strokeSofter" stroke-width="2"/>
+      <path d="M960 362V566" class="strokeSofter" stroke-width="2"/>
+      <path d="M1020 362V566" class="strokeSofter" stroke-width="2"/>
+    </g>
+
+    <!-- Roads -->
+    <path d="M740 520 C820 470 880 520 940 470 C1010 410 1045 430 1100 400" stroke="#3AA0FF" stroke-opacity="0.28" stroke-width="10" stroke-linecap="round"/>
+    <path d="M760 520 C830 470 885 520 946 470 C1012 412 1048 432 1092 404" stroke="#FFFFFF" stroke-opacity="0.60" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 10"/>
+
+    <path d="M820 560 C870 520 930 550 980 510 C1030 470 1060 470 1105 445" stroke="#4FF0C8" stroke-opacity="0.24" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Map pins -->
+    <g>
+      <path d="M870 440c0-18 15-33 33-33s33 15 33 33c0 29-33 64-33 64s-33-35-33-64Z" fill="#3AA0FF" fill-opacity="0.45"/>
+      <circle cx="903" cy="440" r="10" fill="#FFFFFF" fill-opacity="0.75"/>
+
+      <path d="M1020 470c0-16 13-29 29-29s29 13 29 29c0 26-29 58-29 58s-29-32-29-58Z" fill="#4FF0C8" fill-opacity="0.40"/>
+      <circle cx="1049" cy="470" r="9" fill="#FFFFFF" fill-opacity="0.72"/>
+
+      <path d="M800 500c0-14 12-26 26-26s26 12 26 26c0 23-26 52-26 52s-26-29-26-52Z" fill="#3AA0FF" fill-opacity="0.34"/>
+      <circle cx="826" cy="500" r="8" fill="#FFFFFF" fill-opacity="0.70"/>
+    </g>
+
+    <!-- Right-side event list -->
+    <g opacity="0.9">
+      <rect x="720" y="352" width="380" height="44" rx="16" fill="#FFFFFF" fill-opacity="0.55"/>
+      <circle cx="744" cy="374" r="6" fill="#3AA0FF" fill-opacity="0.55"/>
+      <rect x="758" y="368" width="120" height="12" rx="6" fill="#2378E6" fill-opacity="0.14"/>
+      <rect x="892" y="368" width="74" height="12" rx="6" fill="#2378E6" fill-opacity="0.10"/>
+      <rect x="974" y="365" width="104" height="18" rx="9" fill="#4FF0C8" fill-opacity="0.18"/>
+
+      <rect x="720" y="402" width="380" height="44" rx="16" fill="#FFFFFF" fill-opacity="0.48"/>
+      <circle cx="744" cy="424" r="6" fill="#4FF0C8" fill-opacity="0.55"/>
+      <rect x="758" y="418" width="172" height="12" rx="6" fill="#2378E6" fill-opacity="0.12"/>
+      <rect x="938" y="418" width="84" height="12" rx="6" fill="#2378E6" fill-opacity="0.10"/>
+
+      <rect x="720" y="452" width="380" height="44" rx="16" fill="#FFFFFF" fill-opacity="0.42"/>
+      <circle cx="744" cy="474" r="6" fill="#3AA0FF" fill-opacity="0.50"/>
+      <rect x="758" y="468" width="138" height="12" rx="6" fill="#2378E6" fill-opacity="0.12"/>
+      <rect x="904" y="468" width="112" height="12" rx="6" fill="#2378E6" fill-opacity="0.10"/>
+    </g>
+
+    <!-- Header chips -->
+    <g>
+      <rect x="730" y="595" width="120" height="16" rx="8" fill="#2378E6" fill-opacity="0.10"/>
+      <rect x="860" y="595" width="84" height="16" rx="8" fill="#4FF0C8" fill-opacity="0.14"/>
+      <rect x="950" y="595" width="140" height="16" rx="8" fill="#2378E6" fill-opacity="0.08"/>
+    </g>
+  </g>
+
+  <!-- Traffic / analytics mini card -->
+  <g filter="url(#softShadow)">
+    <rect x="90" y="360" width="520" height="260" rx="26" fill="url(#card)" stroke="#2378E6" stroke-opacity="0.14"/>
+
+    <!-- Lane strips -->
+    <g opacity="0.95">
+      <rect x="130" y="420" width="420" height="26" rx="13" fill="url(#lane)"/>
+      <rect x="130" y="460" width="420" height="26" rx="13" fill="url(#lane)" opacity="0.75"/>
+      <rect x="130" y="500" width="420" height="26" rx="13" fill="url(#lane)" opacity="0.6"/>
+
+      <path d="M160 433H520" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 12"/>
+      <path d="M160 473H520" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 12"/>
+      <path d="M160 513H520" stroke="#FFFFFF" stroke-opacity="0.40" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 12"/>
+    </g>
+
+    <!-- Cars (simple) -->
+    <g>
+      <rect x="220" y="425" width="34" height="18" rx="8" fill="#3AA0FF" fill-opacity="0.50"/>
+      <rect x="330" y="425" width="34" height="18" rx="8" fill="#4FF0C8" fill-opacity="0.48"/>
+      <rect x="410" y="425" width="34" height="18" rx="8" fill="#3AA0FF" fill-opacity="0.40"/>
+
+      <rect x="260" y="465" width="34" height="18" rx="8" fill="#4FF0C8" fill-opacity="0.44"/>
+      <rect x="460" y="465" width="34" height="18" rx="8" fill="#3AA0FF" fill-opacity="0.38"/>
+
+      <rect x="200" y="505" width="34" height="18" rx="8" fill="#3AA0FF" fill-opacity="0.34"/>
+      <rect x="370" y="505" width="34" height="18" rx="8" fill="#4FF0C8" fill-opacity="0.38"/>
+      <rect x="500" y="505" width="34" height="18" rx="8" fill="#3AA0FF" fill-opacity="0.30"/>
+    </g>
+
+    <!-- KPI header -->
+    <g opacity="0.9">
+      <rect x="130" y="395" width="150" height="14" rx="7" fill="#2378E6" fill-opacity="0.14"/>
+      <rect x="290" y="395" width="95" height="14" rx="7" fill="#2378E6" fill-opacity="0.10"/>
+      <rect x="392" y="392" width="158" height="18" rx="9" fill="#4FF0C8" fill-opacity="0.14"/>
+    </g>
+
+    <!-- Mini charts -->
+    <g>
+      <rect x="130" y="540" width="310" height="54" rx="18" fill="#FFFFFF" fill-opacity="0.60" stroke="#2378E6" stroke-opacity="0.10"/>
+      <path d="M150 580 C180 560 200 590 230 570 C260 550 280 590 310 570 C340 550 360 585 420 560" stroke="#3AA0FF" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
+      <path d="M150 570 C180 565 205 548 230 555 C255 562 280 540 312 545 C346 550 370 540 420 548" stroke="#4FF0C8" stroke-opacity="0.48" stroke-width="3" stroke-linecap="round"/>
+
+      <rect x="450" y="540" width="120" height="54" rx="18" fill="#FFFFFF" fill-opacity="0.56" stroke="#2378E6" stroke-opacity="0.10"/>
+      <rect x="466" y="578" width="10" height="10" rx="5" fill="url(#bar)"/>
+      <rect x="484" y="570" width="10" height="18" rx="5" fill="url(#bar)"/>
+      <rect x="502" y="562" width="10" height="26" rx="5" fill="url(#bar2)"/>
+      <rect x="520" y="556" width="10" height="32" rx="5" fill="url(#bar)"/>
+      <rect x="538" y="564" width="10" height="24" rx="5" fill="url(#bar2)"/>
+    </g>
+  </g>
+
+  <!-- Sparkles -->
+  <g opacity="0.8">
+    <path d="M1040 120l6 14 14 6-14 6-6 14-6-14-14-6 14-6 6-14Z" fill="#FFFFFF" fill-opacity="0.65"/>
+    <path d="M640 130l5 11 11 5-11 5-5 11-5-11-11-5 11-5 5-11Z" fill="#FFFFFF" fill-opacity="0.55"/>
+    <path d="M140 260l4 9 9 4-9 4-4 9-4-9-9-4 9-4 4-9Z" fill="#FFFFFF" fill-opacity="0.55"/>
+    <circle cx="590" cy="250" r="3" fill="#3AA0FF" fill-opacity="0.35"/>
+    <circle cx="620" cy="232" r="2" fill="#4FF0C8" fill-opacity="0.35"/>
+    <circle cx="560" cy="228" r="2" fill="#3AA0FF" fill-opacity="0.28"/>
+  </g>
+</svg>
