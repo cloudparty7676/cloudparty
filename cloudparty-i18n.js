@@ -2,7 +2,7 @@ const i18n = {
   "zh-Hant": {
     meta: {
       title: "CloudParty｜雲派對",
-      desc: "CloudParty｜年輕有活力的雲端服務品牌，提供 SmartLane 即時車流分析、NextVideo GIS 地理與監控雲端影像分析。"
+      desc: "CloudParty｜雲端服務，提供 左右速速看 SmartLane 即時車流分析、NextVideo GIS 地理與監控雲端影像分析。"
     },
     nav: {
       homeAria: "雲派對 首頁",
@@ -99,7 +99,7 @@ const i18n = {
   en: {
     meta: {
       title: "CloudParty | Cloud Services",
-      desc: "CloudParty is a young, energetic cloud brand offering SmartLane real-time traffic analytics and NextVideo GIS & video intelligence."
+      desc: "CloudParty | Cloud services providing SmartLane real-time traffic analytics and NextVideo GIS and cloud video monitoring intelligence."
     },
     nav: {
       homeAria: "CloudParty home",
