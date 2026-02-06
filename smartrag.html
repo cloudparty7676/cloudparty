@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta id="meta-desc" name="description" content="智慧文件搜尋系統，私有文件管理的多語言 AI 協作者" />
+  <title>SmartRAG 智慧文件搜尋</title>
+  <style>
+    :root{
+      --bg:#f8f9fb;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#4e5c72;
+      --line:rgba(34,62,130,.15);
+      --primary:#5c6bff;
+      --primary2:#85d1ff;
+      --good:#4ff0c8;
+      --warn:#ffd36b;
+      --bad:#ff6b8b;
+      --shadow: 0 20px 60px rgba(10,30,80,.12);
+      --shadow2: 0 12px 36px rgba(10,30,80,.10);
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1120px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 760px at 20% -10%, rgba(92,107,255,.24), transparent 55%),
+        radial-gradient(900px 560px at 90% 10%, rgba(133,209,255,.25), transparent 60%),
+        radial-gradient(900px 560px at 70% 90%, rgba(79,240,200,.14), transparent 60%),
+        var(--bg);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 18px}
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:blur(14px);
+      background:rgba(248,249,251,.8);
+      border-bottom:1px solid var(--line);
+    }
+    .row{display:flex; align-items:center; justify-content:space-between; height:68px}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:900}
+    .logo{
+      width:38px;height:38px;border-radius:14px;
+      background: conic-gradient(from 210deg, var(--primary), var(--primary2), var(--good), var(--primary));
+      box-shadow:0 10px 22px rgba(92,107,255,.3);
+      position:relative; overflow:hidden;
+    }
+    .logo:after{
+      content:""; position:absolute; inset:-20%;
+      background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.75), transparent 52%);
+      transform:rotate(18deg);
+    }
+    .links{display:flex; gap:16px; align-items:center}
+    .links a{padding:10px 12px; border-radius:12px; color:var(--muted); transition:.15s ease}
+    .links a:hover{background:rgba(92,107,255,.08); color:var(--text)}
+    .langSwitch{display:inline-flex; gap:8px; align-items:center; margin-left:6px}
+    .langBtn{
+      padding:8px 10px; border-radius:10px; font-size:12.5px; font-weight:800;
+      border:1px solid rgba(92,107,255,.22);
+      background:rgba(255,255,255,.7);
+      color:var(--muted);
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .langBtn.is-active{background:rgba(92,107,255,.18); color:var(--text)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 16px; border-radius:14px;
+      border:1px solid rgba(92,107,255,.28);
+      background: linear-gradient(180deg, rgba(92,107,255,.18), rgba(92,107,255,.08));
+      box-shadow:0 12px 30px rgba(92,107,255,.12);
+      font-weight:800;
+      transition:.15s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:0 18px 38px rgba(92,107,255,.16)}
+    .btn.primary{
+      border:0;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      color:#fff;
+      box-shadow:0 18px 50px rgba(92,107,255,.28);
+    }
+    .menuBtn{display:none}
+    .mnav{display:none; border-top:1px solid var(--line); padding:10px 0 14px}
+    .mnav a{display:block; padding:12px 12px; border-radius:14px; color:var(--muted)}
+    .mnav a:hover{background:rgba(92,107,255,.08); color:var(--text)}
+    .show{display:block}
+
+    .hero{padding:60px 0 18px}
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns: 1.05fr .95fr;
+      align-items:stretch;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(92,107,255,.28);
+      background:rgba(255,255,255,.58);
+      color:var(--muted);
+      font-weight:700;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background:var(--good);
+      box-shadow:0 0 0 5px rgba(79,240,200,.18);
+      animation:pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1); opacity:1}
+      50%{transform:scale(1.15); opacity:.85}
+    }
+    h1{margin:14px 0 10px; font-size:44px; line-height:1.1; letter-spacing:-.02em}
+    .lead{margin:0 0 18px; color:var(--muted); font-size:16.5px; line-height:1.7}
+    .lead span{display:block}
+    .actions{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.78));
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      padding:16px;
+      position:relative; overflow:hidden;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; font-weight:900;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(92,107,255,.12);
+      border: 1px solid rgba(92,107,255,.18);
+      color:#0e2a55;
+    }
+    section{padding:44px 0}
+    .sectionHead{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px}
+    .sectionHead h2{margin:0; font-size:28px; letter-spacing:-.01em}
+    .sectionHead p{margin:0; color:var(--muted); line-height:1.6; max-width:64ch}
+    .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+    .box{
+      background:rgba(255,255,255,.9);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding:18px;
+      position:relative; overflow:hidden;
+    }
+    .box h3{margin:0 0 8px; font-size:18px}
+    .box p{margin:0; color:var(--muted); line-height:1.6}
+    .list{margin:14px 0 0; padding:0 0 0 18px; color:var(--muted); line-height:1.7}
+    .cta{
+      padding:50px 0 70px;
+    }
+    .ctaBox{
+      background: linear-gradient(135deg, rgba(92,107,255,.18), rgba(79,240,200,.16));
+      border:1px solid rgba(92,107,255,.18);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding:32px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      overflow:hidden;
+      position:relative;
+    }
+    .ctaBox div{max-width:60%}
+    .ctaBox .details{color:var(--muted); line-height:1.6}
+    footer{
+      padding:22px 0 34px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+    }
+    .footRow{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .small{font-size:12.5px}
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      h1{font-size:40px}
+      .ctaBox{flex-direction:column; align-items:flex-start}
+      .ctaBox .details{max-width:100%}
+    }
+    @media (max-width: 760px){
+      .links{display:none}
+      .menuBtn{display:inline-flex}
+      .grid3{grid-template-columns:1fr}
+      .sectionHead{flex-direction:column; align-items:flex-start}
+      h1{font-size:36px}
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <div class="row">
+        <a class="brand" href="#top" aria-label="SmartRAG home" data-i18n-attr="aria-label:nav.homeAria">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div style="line-height:1">SmartRAG</div>
+            <div class="small" style="color:var(--muted); font-weight:900; margin-top:2px;" data-i18n="nav.subtitle">RAG-powered knowledge</div>
+          </div>
+        </a>
+        <nav class="links" aria-label="Primary navigation" data-i18n-attr="aria-label:nav.aria">
+          <a href="#advantage" data-i18n="nav.advantage">優勢</a>
+          <a href="#why" data-i18n="nav.why">為什麼</a>
+          <a href="#contact" data-i18n="nav.contact">聯絡</a>
+          <div class="langSwitch" aria-label="Language switch" data-i18n-attr="aria-label:nav.langAria">
+            <button class="langBtn" type="button" data-lang="zh-Hant">繁體</button>
+            <button class="langBtn" type="button" data-lang="en">EN</button>
+          </div>
+        </nav>
+        <a class="btn menuBtn" id="menuBtn" href="javascript:void(0)" aria-label="Open navigation" data-i18n="nav.menu" data-i18n-attr="aria-label:nav.menuAria">Menu</a>
+      </div>
+      <div class="mnav" id="mnav" aria-label="Mobile navigation" data-i18n-attr="aria-label:nav.mobileAria">
+        <a href="#advantage" data-i18n="nav.advantage">優勢</a>
+        <a href="#why" data-i18n="nav.why">為什麼</a>
+        <a href="#contact" data-i18n="nav.contact">聯絡</a>
+        <a class="btn primary" style="margin:10px 12px 0; width:calc(100% - 24px);" href="#contact" data-i18n="cta.action">立即聯絡</a>
+        <div class="langSwitch" style="margin:10px 12px 0;" aria-label="Language switch" data-i18n-attr="aria-label:nav.langAria">
+          <button class="langBtn" type="button" data-lang="zh-Hant">繁體</button>
+          <button class="langBtn" type="button" data-lang="en">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <div class="grid">
+          <div>
+            <div class="pill" data-i18n="hero.pill"><span class="dot"></span>RAG 智慧搜尋</div>
+            <h1 data-i18n-html="hero.title">智慧文件搜尋系統<br/>讓私有文件管理更高效</h1>
+            <p class="lead">
+              <span data-i18n="hero.lead.line1">是否厭倦在海量文件中翻找資料，導致錯誤頻發？</span>
+              <span data-i18n="hero.lead.line2">使用私有 RAG 技術，讓您的團隊以自然語言提問即可獲得準確回答，同時保持資料完全私有。</span>
+            </p>
+            <div class="actions">
+              <a class="btn primary" href="#advantage" data-i18n="hero.actions.advantage">探索優勢</a>
+              <a class="btn" href="#contact" data-i18n="hero.actions.contact">立即試用</a>
+            </div>
+          </div>
+          <div class="card" aria-label="RAG summary" data-i18n-attr="aria-label:hero.cardAria">
+            <div class="tag" data-i18n="hero.cardTag">RAG 實戰</div>
+            <p data-i18n="hero.cardCopy">即時檢索、私有部署、洞察生成，為法律、金融、醫療等對資料要求高的團隊量身打造。</p>
+            <ul class="list">
+              <li data-i18n="hero.cardList1">多語言文件原生支援</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="advantage">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="advantage.title">RAG 技術的核心優勢</h2>
+            <p data-i18n="advantage.desc">結合檢索與生成的智慧搜尋，從私有文件中找出答案、總結洞見，並以 AI 輔助決策。</p>
+          </div>
+        </div>
+        <div class="grid3">
+          <div class="box">
+            <h3 data-i18n="advantage.card1.title">即時精準檢索</h3>
+            <p data-i18n="advantage.card1.desc">輸入自然語言問題，系統即刻從所有私有文件中找出相關內容並生成摘要，節省 80% 搜尋時間。</p>
+          </div>
+          <div class="box">
+            <h3 data-i18n="advantage.card2.title">資料完全私有</h3>
+            <p data-i18n="advantage.card2.desc">部署於內部或私有雲端，RAG 僅在企業邊界內運作，符合 GDPR 與其他隱私法規。</p>
+          </div>
+          <div class="box">
+            <h3 data-i18n="advantage.card3.title">智能生成洞見</h3>
+            <p data-i18n="advantage.card3.desc">自動摘要合約條款、提煉報告重點或生成策略建議，協助團隊迅速決策。</p>
+          </div>
+          <div class="box">
+            <h3 data-i18n="advantage.card4.title">易於整合與擴展</h3>
+            <p data-i18n="advantage.card4.desc">無需複雜設定即可接入現有 Google Drive、SharePoint、多語言資料庫與本地伺服器。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="why.title">為什麼選擇我們？</h2>
+            <p data-i18n="why.desc">將您的團隊從文件堆中解放出來，專注在核心業務，進一步提升創新與成長速度。</p>
+          </div>
+        </div>
+        <ul class="list">
+          <li data-i18n="why.bullet1">超過 50 家企業採用類似系統，生產力提升 30% 以上。</li>
+          <li data-i18n="why.bullet2">提供 AI 驅動的洞見，讓決策更有依據。</li>
+          <li data-i18n="why.bullet3">多語言支援讓跨國團隊能即時協作。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cta" id="contact">
+      <div class="wrap">
+        <div class="ctaBox">
+          <div>
+            <h3 style="margin:0 0 6px; font-size:22px;" data-i18n="cta.title">立即行動</h3>
+            <p class="details" data-i18n="cta.desc">聯絡我們，讓智慧文件搜尋成為您公司的競爭優勢，感受 RAG 帶來的轉變。</p>
+            <p class="small" data-i18n="cta.contact">聯絡資訊：email@yourcompany.com | 電話：+886-2-12345678</p>
+          </div>
+          <div class="actions">
+            <a class="btn primary" href="mailto:email@yourcompany.com" data-i18n="cta.action">聯絡我們</a>
+            <a class="btn" href="#advantage" data-i18n="cta.back">了解優勢</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footRow">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div style="font-weight:900; color:var(--text)">SmartRAG</div>
+            <div class="small" data-i18n="footer.tagline">RAG 智慧搜尋 · 私有資料 · AI 洞見</div>
+          </div>
+        </div>
+        <div class="small" data-i18n-html="footer.copyright">版權所有 © <span id="y"></span> SmartRAG. Powered by CloudParty.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="smartrag-i18n.js"></script>
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const id = a.getAttribute('href');
+        if(!id || id === "#") return;
+        const el = document.querySelector(id);
+        if(!el) return;
+        e.preventDefault();
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+        const mnav = document.getElementById('mnav');
+        if(mnav) mnav.classList.remove('show');
+      });
+    });
+
+    const menuBtn = document.getElementById('menuBtn');
+    const mnav = document.getElementById('mnav');
+    if(menuBtn && mnav){
+      menuBtn.addEventListener('click', ()=> mnav.classList.toggle('show'));
+    }
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
