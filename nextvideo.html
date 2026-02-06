@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta id="meta-desc" name="description" content="NextVideo｜GIS 地理與監控服務方案，主要提供雲端影像分析、地圖式監控中樞、事件告警與權限管理。" />
+  <title>NextVideo｜GIS 監控中樞與雲端影像分析</title>
+  <style>
+    :root{
+      --bg:#f6fbff;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#4b5a77;
+      --line:rgba(26,60,120,.12);
+      --primary:#3aa0ff;
+      --primary2:#7ad3ff;
+      --accent:#4ff0c8;
+      --shadow: 0 18px 60px rgba(10,40,90,.12);
+      --shadow2: 0 10px 28px rgba(10,40,90,.10);
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1120px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 760px at 20% -10%, rgba(58,160,255,.22), transparent 55%),
+        radial-gradient(900px 560px at 88% 8%, rgba(122,211,255,.22), transparent 60%),
+        radial-gradient(900px 560px at 70% 90%, rgba(79,240,200,.14), transparent 60%),
+        var(--bg);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 18px}
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:saturate(1.2) blur(12px);
+      background:rgba(246,251,255,.72);
+      border-bottom:1px solid var(--line);
+    }
+    .row{display:flex; align-items:center; justify-content:space-between; height:68px}
+    .brand{display:flex; gap:10px; align-items:center; font-weight:900}
+    .logo{
+      width:38px;height:38px;border-radius:14px;
+      background: conic-gradient(from 180deg, var(--primary), var(--primary2), var(--accent), var(--primary));
+      box-shadow:0 10px 20px rgba(58,160,255,.25);
+      position:relative; overflow:hidden;
+    }
+    .logo:after{
+      content:""; position:absolute; inset:-20%;
+      background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.75), transparent 52%);
+      transform:rotate(18deg);
+    }
+    .links{display:flex; gap:16px; align-items:center}
+    .links a{padding:10px 12px; border-radius:12px; color:var(--muted); transition:.15s ease}
+    .links a:hover{background:rgba(58,160,255,.10); color:var(--text)}
+    .langSwitch{display:inline-flex; gap:8px; align-items:center; margin-left:6px}
+    .langBtn{
+      padding:8px 10px; border-radius:10px; font-size:12.5px; font-weight:900;
+      border:1px solid rgba(58,160,255,.22);
+      background:rgba(255,255,255,.7);
+      color:var(--muted);
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .langBtn.is-active{background:rgba(58,160,255,.18); color:var(--text)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 16px; border-radius:14px;
+      border:1px solid rgba(58,160,255,.28);
+      background: linear-gradient(180deg, rgba(58,160,255,.18), rgba(58,160,255,.08));
+      box-shadow:0 12px 30px rgba(58,160,255,.12);
+      font-weight:900;
+      transition:.15s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:0 18px 38px rgba(58,160,255,.16)}
+    .btn.primary{
+      border:0;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      color:#fff;
+      box-shadow:0 18px 50px rgba(58,160,255,.28);
+    }
+    .menuBtn{display:none}
+    .mnav{display:none; border-top:1px solid var(--line); padding:10px 0 14px}
+    .mnav a{display:block; padding:12px 12px; border-radius:14px; color:var(--muted)}
+    .mnav a:hover{background:rgba(58,160,255,.10); color:var(--text)}
+    .show{display:block}
+
+    .hero{padding:60px 0 18px}
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns: 1.05fr .95fr;
+      align-items:stretch;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(58,160,255,.28);
+      background:rgba(255,255,255,.58);
+      color:var(--muted);
+      font-weight:800;
+    }
+    .pin{
+      width:9px;height:9px;border-radius:99px;
+      background:var(--accent);
+      box-shadow:0 0 0 5px rgba(79,240,200,.18);
+    }
+    h1{margin:14px 0 10px; font-size:44px; line-height:1.1; letter-spacing:-.02em}
+    .lead{margin:0 0 18px; color:var(--muted); font-size:16.5px; line-height:1.65}
+    .actions{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.72));
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      padding:16px;
+      position:relative; overflow:hidden;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; font-weight:900;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(58,160,255,.12);
+      border: 1px solid rgba(58,160,255,.18);
+      color:#0e2a55;
+    }
+    .mini{
+      border-radius: var(--radius);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      box-shadow: var(--shadow2);
+      padding:12px;
+      margin-top:12px;
+    }
+
+    /* Mock GIS map */
+    .map{
+      width:100%;
+      height:340px;
+      border-radius:22px;
+      border:1px solid rgba(26,60,120,.12);
+      background:
+        radial-gradient(220px 180px at 70% 35%, rgba(58,160,255,.20), transparent 60%),
+        radial-gradient(260px 200px at 25% 60%, rgba(79,240,200,.14), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.65));
+      position:relative;
+      overflow:hidden;
+    }
+    .gridlines{
+      position:absolute; inset:0;
+      background:
+        linear-gradient(to right, rgba(26,60,120,.06) 1px, transparent 1px) 0 0/48px 48px,
+        linear-gradient(to bottom, rgba(26,60,120,.06) 1px, transparent 1px) 0 0/48px 48px;
+      opacity:.8;
+    }
+    .route{
+      position:absolute; inset:0;
+    }
+    .badge{
+      position:absolute;
+      padding:8px 10px;
+      border-radius:14px;
+      background:rgba(255,255,255,.78);
+      border:1px solid rgba(26,60,120,.12);
+      box-shadow: var(--shadow2);
+      font-size:12px;
+      color:#173158;
+      font-weight:900;
+      display:flex; align-items:center; gap:8px;
+    }
+    .camDot{
+      width:10px;height:10px;border-radius:99px;
+      background: var(--primary);
+      box-shadow:0 0 0 5px rgba(58,160,255,.16);
+    }
+    .eventDot{
+      width:10px;height:10px;border-radius:99px;
+      background: #ff6b8b;
+      box-shadow:0 0 0 5px rgba(255,107,139,.14);
+    }
+
+    section{padding:44px 0}
+    .sectionHead{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px}
+    .sectionHead h2{margin:0; font-size:28px; letter-spacing:-.01em}
+    .sectionHead p{margin:0; color:var(--muted); line-height:1.6; max-width:72ch}
+    .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+    .grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+    .box{
+      background:rgba(255,255,255,.78);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding:16px;
+      position:relative; overflow:hidden;
+    }
+    .box h3{margin:10px 0 8px; font-size:18px}
+    .box p{margin:0; color:var(--muted); line-height:1.65}
+    .list{margin:10px 0 0; padding:0 0 0 18px; color:var(--muted); line-height:1.7}
+
+    .cta{padding:44px 0 64px}
+    .ctaBox{
+      background: linear-gradient(135deg, rgba(58,160,255,.18), rgba(79,240,200,.12));
+      border:1px solid rgba(58,160,255,.18);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding:22px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      overflow:hidden;
+      position:relative;
+    }
+    footer{
+      padding:22px 0 34px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+    }
+    .footRow{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .small{font-size:12.5px}
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      h1{font-size:40px}
+      .map{height:320px}
+    }
+    @media (max-width: 760px){
+      .links{display:none}
+      .menuBtn{display:inline-flex}
+      .grid3{grid-template-columns:1fr}
+      .grid2{grid-template-columns:1fr}
+      h1{font-size:36px}
+      .ctaBox{flex-direction:column; align-items:flex-start}
+      .map{height:300px}
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <div class="row">
+        <a class="brand" href="#top" aria-label="NextVideo 首頁" data-i18n-attr="aria-label:nav.homeAria">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div style="line-height:1">NextVideo</div>
+            <div class="small" style="color:var(--muted); font-weight:900; margin-top:2px;" data-i18n="nav.subtitle">GIS × Cloud Video Analytics</div>
+          </div>
+        </a>
+
+        <nav class="links" aria-label="主要導覽" data-i18n-attr="aria-label:nav.aria">
+          <a href="#features" data-i18n="nav.features">功能</a>
+          <a href="#console" data-i18n="nav.console">主控台</a>
+          <a href="#architecture" data-i18n="nav.architecture">架構</a>
+          <a href="#scenes" data-i18n="nav.scenes">場景</a>
+          <a href="#contact" data-i18n="nav.contact">聯絡</a>
+          <a class="btn primary" href="#contact" data-i18n="nav.demo">預約 Demo</a>
+          <div class="langSwitch" aria-label="Language switch" data-i18n-attr="aria-label:nav.langAria">
+            <button class="langBtn" type="button" data-lang="zh-Hant">中</button>
+            <button class="langBtn" type="button" data-lang="en">EN</button>
+          </div>
+        </nav>
+
+        <a class="btn menuBtn" id="menuBtn" href="javascript:void(0)" aria-label="開啟選單" data-i18n="nav.menu" data-i18n-attr="aria-label:nav.menuAria">選單 ☰</a>
+      </div>
+
+      <div class="mnav" id="mnav" aria-label="手機導覽" data-i18n-attr="aria-label:nav.mobileAria">
+        <a href="#features" data-i18n="nav.features">功能</a>
+        <a href="#console" data-i18n="nav.console">主控台</a>
+        <a href="#architecture" data-i18n="nav.architecture">架構</a>
+        <a href="#scenes" data-i18n="nav.scenes">場景</a>
+        <a href="#contact" data-i18n="nav.contact">聯絡</a>
+        <a class="btn primary" style="margin:10px 12px 0; width:calc(100% - 24px);" href="#contact" data-i18n="nav.demo">預約 Demo</a>
+        <div class="langSwitch" style="margin:10px 12px 0;" aria-label="Language switch" data-i18n-attr="aria-label:nav.langAria">
+          <button class="langBtn" type="button" data-lang="zh-Hant">中</button>
+          <button class="langBtn" type="button" data-lang="en">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <div class="grid">
+          <div>
+            <div class="pill" data-i18n="hero.pill"><span class="pin"></span>GIS 地理 × 監控影像 × 雲端影像分析</div>
+            <h1 data-i18n-html="hero.title">用地圖管理影像<br/>用事件管理風險</h1>
+            <p class="lead">
+              <span data-i18n="hero.lead.line1">NextVideo 是以 GIS 為核心的監控與影像分析方案，</span>
+              <span data-i18n="hero.lead.line2">將多路攝影機、場域資產與事件告警整合到雲端主控台，支援權限控管與流程串接。</span>
+            </p>
+            <div class="actions">
+              <a class="btn primary" href="#console" data-i18n="hero.actions.console">看主控台</a>
+              <a class="btn" href="#features" data-i18n="hero.actions.features">看功能</a>
+            </div>
+          </div>
+
+          <div class="card" aria-label="GIS 監控示意" data-i18n-attr="aria-label:hero.cardAria">
+            <div class="tag" data-i18n="hero.cardTag">Map-first Console（示意）</div>
+            <div class="mini">
+              <div style="font-weight:900; margin-bottom:10px;" data-i18n="hero.cardTitle">場域總覽</div>
+              <div class="map" role="img" aria-label="地圖示意（可替換成真實地圖/截圖）" data-i18n-attr="aria-label:hero.mapAria">
+                <div class="gridlines"></div>
+                <svg class="route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M5,70 C25,58 30,42 48,46 C62,49 66,22 92,20"
+                        fill="none" stroke="rgba(58,160,255,.55)" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M12,80 C30,76 45,78 58,70 C70,62 78,55 95,55"
+                        fill="none" stroke="rgba(79,240,200,.45)" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+
+                <div class="badge" style="left:12%; top:24%;">
+                  <span class="camDot"></span> <span data-i18n="hero.badge1">CAM-021｜入口</span>
+                </div>
+                <div class="badge" style="left:58%; top:18%;">
+                  <span class="camDot"></span> <span data-i18n="hero.badge2">CAM-113｜路口</span>
+                </div>
+                <div class="badge" style="left:32%; top:64%;">
+                  <span class="camDot"></span> <span data-i18n="hero.badge3">CAM-044｜停車區</span>
+                </div>
+                <div class="badge" style="left:64%; top:62%;">
+                  <span class="eventDot"></span> <span data-i18n="hero.badge4">事件｜可疑滯留（示意）</span>
+                </div>
+              </div>
+              <p class="small" style="color:var(--muted); margin:10px 0 0;">
+                <span data-i18n="hero.cardNote">※ 可替換為你們實際 Console 截圖（地圖、攝影機點位、事件面板）。</span>
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="features.title">核心功能</h2>
+            <p data-i18n="features.desc">把「影像」放到「地理脈絡」中：你不只看到畫面，更知道在哪裡、影響範圍與處置流程。</p>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="box">
+            <div class="tag" data-i18n="features.card1.tag">GIS</div>
+            <h3 data-i18n="features.card1.title">地圖式資產管理</h3>
+            <p data-i18n="features.card1.desc">攝影機、場域、設備、區域…全部落在 GIS，快速定位與管理。</p>
+            <ul class="list">
+              <li data-i18n="features.card1.list1">點位/區域/路線</li>
+              <li data-i18n="features.card1.list2">多場域切換</li>
+              <li data-i18n="features.card1.list3">可視化圖層</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="features.card2.tag">Video AI</div>
+            <h3 data-i18n="features.card2.title">雲端影像分析</h3>
+            <p data-i18n="features.card2.desc">支援事件偵測與自訂規則，將「異常」變成可追蹤的事件。</p>
+            <ul class="list">
+              <li data-i18n="features.card2.list1">事件偵測與標註</li>
+              <li data-i18n="features.card2.list2">時序回放與搜尋</li>
+              <li data-i18n="features.card2.list3">可擴充模型能力</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="features.card3.tag">Ops</div>
+            <h3 data-i18n="features.card3.title">告警與流程串接</h3>
+            <p data-i18n="features.card3.desc">把事件推到群組/工單/系統，形成可追蹤的處置流程。</p>
+            <ul class="list">
+              <li data-i18n="features.card3.list1">Webhook / 通知整合</li>
+              <li data-i18n="features.card3.list2">事件嚴重度與分派</li>
+              <li data-i18n="features.card3.list3">審計與報表</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="console">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="console.title">主控台設計</h2>
+            <p data-i18n="console.desc">主畫面以地圖為中心，旁邊是事件面板與影像牆，讓操作直覺、反應更快。</p>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="box">
+            <div class="tag" data-i18n="console.card1.tag">Map-first</div>
+            <h3 data-i18n="console.card1.title">地圖＋事件面板</h3>
+            <p data-i18n="console.card1.desc">點位、事件、資產關聯一目了然；支援篩選圖層與關鍵字搜尋。</p>
+            <ul class="list">
+              <li data-i18n="console.card1.list1">事件列表 / 熱區 / 影響範圍</li>
+              <li data-i18n="console.card1.list2">快速定位攝影機畫面</li>
+              <li data-i18n="console.card1.list3">一鍵導出報表</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="console.card2.tag">Video Wall</div>
+            <h3 data-i18n="console.card2.title">影像牆與回放</h3>
+            <p data-i18n="console.card2.desc">多路畫面同時監看，支援時間軸回放與事件片段快速回看。</p>
+            <ul class="list">
+              <li data-i18n="console.card2.list1">多路併排 / 自訂佈局</li>
+              <li data-i18n="console.card2.list2">事件切片與標註</li>
+              <li data-i18n="console.card2.list3">取證與留存策略</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="architecture.title">架構與部署</h2>
+            <p data-i18n="architecture.desc">雲端原生 + 可擴充：可從小規模導入到多場域、多租戶的大型部署。</p>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="box">
+            <div class="tag" data-i18n="architecture.card1.tag">Security</div>
+            <h3 data-i18n="architecture.card1.title">權限與多租戶</h3>
+            <p data-i18n="architecture.card1.desc">依角色與場域控管：誰能看哪個地點、哪支攝影機、哪些事件。</p>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="architecture.card2.tag">Scale</div>
+            <h3 data-i18n="architecture.card2.title">彈性擴充</h3>
+            <p data-i18n="architecture.card2.desc">支援更多點位與更高併發；可依需求調整儲存與分析資源。</p>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="architecture.card3.tag">Integrations</div>
+            <h3 data-i18n="architecture.card3.title">可整合你的系統</h3>
+            <p data-i18n="architecture.card3.desc">事件/點位/影像 Metadata 可透過 API 與 Webhook 串接到既有平台。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scenes">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="scenes.title">適用場景</h2>
+            <p data-i18n="scenes.desc">城市治理、園區管理、工地監控、物流場站、公共安全…只要你需要「地圖＋影像＋事件」就適合。</p>
+          </div>
+        </div>
+        <div class="grid3">
+          <div class="box">
+            <div class="tag" data-i18n="scenes.card1.tag">City</div>
+            <h3 data-i18n="scenes.card1.title">城市治理與公共安全</h3>
+            <p data-i18n="scenes.card1.desc">以 GIS 追蹤事件位置、熱區與趨勢，提升應變效率。</p>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="scenes.card2.tag">Campus</div>
+            <h3 data-i18n="scenes.card2.title">園區/廠區管理</h3>
+            <p data-i18n="scenes.card2.desc">場域與資產落在地圖上，事件與告警可追蹤與稽核。</p>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="scenes.card3.tag">Logistics</div>
+            <h3 data-i18n="scenes.card3.title">物流場站與周界</h3>
+            <p data-i18n="scenes.card3.desc">進出點位、車流、人員/車輛異常事件整合管理。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" id="contact">
+      <div class="wrap">
+        <div class="ctaBox">
+          <div style="position:relative; z-index:1;">
+            <h3 style="margin:0 0 6px; font-size:22px;" data-i18n="cta.title">想打造 GIS 監控中樞？</h3>
+            <p style="margin:0; color:var(--muted); line-height:1.6;">
+              <span data-i18n="cta.desc">我們可以先用一個場域做 PoC，把地圖、點位、事件、告警流程跑起來，再逐步擴充。</span>
+            </p>
+            <p class="small" style="margin-top:8px;" data-i18n="cta.note">（此處可改成表單、Email、Line、或聯絡資訊）</p>
+          </div>
+          <div class="actions" style="position:relative; z-index:1;">
+            <a class="btn primary" href="mailto:hello@nextvideo.example" onclick="return false;" data-i18n="cta.demo">預約 Demo</a>
+            <a class="btn" href="#features" data-i18n="cta.back">回到功能</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <div class="footRow">
+          <div class="brand">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+              <div style="font-weight:900; color:var(--text)">NextVideo</div>
+              <div class="small" data-i18n="footer.copyright">© <span id="y"></span> NextVideo. Powered by CloudParty.</div>
+            </div>
+          </div>
+          <div class="small" data-i18n="footer.tagline">GIS · Cloud Video · Events · Alerts · Access Control</div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="nextvideo-i18n.js"></script>
+  <script>
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const id = a.getAttribute('href');
+        if(!id || id === "#") return;
+        const el = document.querySelector(id);
+        if(!el) return;
+        e.preventDefault();
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+        const mnav = document.getElementById('mnav');
+        if(mnav) mnav.classList.remove('show');
+      });
+    });
+
+    // Mobile menu
+    const menuBtn = document.getElementById('menuBtn');
+    const mnav = document.getElementById('mnav');
+    if(menuBtn && mnav){
+      menuBtn.addEventListener('click', ()=> mnav.classList.toggle('show'));
+    }
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

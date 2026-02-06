@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勞務報酬單產生器</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { text-align: center; }
+        form { max-width: 800px; margin: auto; }
+        .section { margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; }
+        input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #output { margin-top: 20px; border: 1px solid #ddd; padding: 20px; max-width: 800px; margin: auto; font-size: 12px; }
+        #output table { border-collapse: collapse; margin: auto; }
+        #output table td { padding: 5px; vertical-align: top; }
+        #pdfPreview { margin-top: 20px; width: 100%; height: 500px; }
+        .s2 { font-size: 12px; }
+        .s3 { font-size: 12px; }
+        .s4 { font-weight: bold; }
+        .s5 { font-weight: bold; text-decoration: underline; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <h1>勞務報酬單產生器</h1>
+    <form id="laborForm">
+        <div class="section">
+            <h2>基本資料</h2>
+            <label>姓名: <input type="text" id="name" required></label>
+            <label>身份證號/護照號: <input type="text" id="idNumber" required></label>
+            <label>國籍/居留身分:
+                <select id="nationality" required>
+                    <option value="">選擇身分</option>
+                    <option value="national">本國籍</option>
+                    <option value="foreign_resident">外國籍在台滿183天</option>
+                    <option value="foreign_nonresident">外國籍在台未滿183天</option>
+                </select>
+            </label>
+            <label>戶籍地址: <input type="text" id="address"></label>
+            <label>連絡電話: <input type="tel" id="phone"></label>
+        </div>
+        
+        <div class="section">
+            <h2>勞務資料</h2>
+            <label>所得類別:
+                <select id="incomeType" required>
+                    <option value="">選擇類別</option>
+                    <option value="50">50: 薪資所得</option>
+                    <option value="9A">9A: 執行業務所得</option>
+                    <option value="9B">9B: 稿費</option>
+                    <option value="92">92: 其他所得</option>
+                </select>
+            </label>
+            <label>所得總金額 (NTD): <input type="number" id="totalAmount" required min="0"></label>
+            <label>服務期間開始日期: <input type="date" id="startDate"></label>
+            <label>服務期間結束日期: <input type="date" id="endDate"></label>
+            <label>勞務內容: <textarea id="serviceDesc"></textarea></label>
+        </div>
+        
+        <div class="section">
+            <h2>支付細節 (選填)</h2>
+            <label>銀行名稱: <input type="text" id="bankName"></label>
+            <label>銀行分行: <input type="text" id="branch"></label>
+            <label>所得人帳號: <input type="text" id="accountNumber"></label>
+            <label>所得人戶名: <input type="text" id="accountHolder"></label>
+            <label>付款方式:
+                <select id="paymentMethod">
+                    <option value="現金">現金</option>
+                    <option value="匯款">匯款</option>
+                    <option value="支票">支票</option>
+                    <option value="禮券">禮券</option>
+                </select>
+            </label>
+            <label>提供職業工會的健保加保證明 (免扣二代健保): <input type="checkbox" id="unionProof"></label>
+        </div>
+        
+        <button type="button" onclick="generateSlip()">產生勞務報酬單</button>
+    </form>
+    
+    <div id="output"></div>
+    <iframe id="pdfPreview" style="display: none;"></iframe>
+    <button id="downloadPdf" style="display: none;" onclick="downloadPdfFile()">下載 PDF</button>
+    
+    <script>
+        let pdfBlobUrl = null;
+
+        function formatDateToChinese(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${year} 年 ${month} 月 ${day} 日`;
+        }
+
+        function generateSlip() {
+            const name = document.getElementById('name').value;
+            const idNumber = document.getElementById('idNumber').value;
+            const nationality = document.getElementById('nationality').value;
+            const address = document.getElementById('address').value;
+            const phone = document.getElementById('phone').value;
+            const incomeType = document.getElementById('incomeType').value;
+            const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+            const startDate = formatDateToChinese(document.getElementById('startDate').value);
+            const endDate = formatDateToChinese(document.getElementById('endDate').value);
+            const serviceDesc = document.getElementById('serviceDesc').value;
+            const bankName = document.getElementById('bankName').value;
+            const branch = document.getElementById('branch').value;
+            const accountNumber = document.getElementById('accountNumber').value;
+            const accountHolder = document.getElementById('accountHolder').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const unionProof = document.getElementById('unionProof').checked;
+            
+            // 確定居住者身分
+            const isResident = (nationality === 'national' || nationality === 'foreign_resident');
+            
+            // 稅務計算 (基於2026年規則)
+            let withheldTax = 0;
+            let healthPremium = 0; // 二代健保 2.11%
+            const basicWage = 29500; // 2026基本工資
+            const wage15Times = basicWage * 1.5; // 44250
+            const deductThreshold50 = 90501; // 薪資起扣點
+            const deductThreshold = 20010; // 其他門檻
+            const healthThreshold = 20000; // 二代健保門檻
+            const healthThreshold50 = basicWage; // 薪資二代健保門檻
+            
+            // 二代健保
+            if (!unionProof) {
+                if (incomeType === '50') {
+                    if (totalAmount >= healthThreshold50) {
+                        healthPremium = totalAmount * 0.0211;
+                    }
+                } else if (['9A', '9B'].includes(incomeType)) {
+                    if (totalAmount >= healthThreshold) {
+                        healthPremium = totalAmount * 0.0211;
+                    }
+                }
+                // 92 免扣
+            }
+            
+            // 所得稅扣繳
+            if (isResident) {
+                if (incomeType === '50') {
+                    if (totalAmount >= deductThreshold50) {
+                        withheldTax = totalAmount * 0.05;
+                    }
+                } else if (incomeType === '9A') {
+                    if (totalAmount >= deductThreshold) {
+                        withheldTax = totalAmount * 0.10;
+                    }
+                } else if (incomeType === '9B') {
+                    if (totalAmount >= deductThreshold) {
+                        withheldTax = totalAmount * 0.10;
+                    }
+                } else if (incomeType === '92') {
+                    withheldTax = 0;
+                }
+            } else {
+                if (incomeType === '50') {
+                    if (totalAmount <= wage15Times) {
+                        withheldTax = totalAmount * 0.06;
+                    } else {
+                        withheldTax = totalAmount * 0.18;
+                    }
+                } else if (incomeType === '9A') {
+                    withheldTax = totalAmount * 0.20;
+                } else if (incomeType === '9B') {
+                    if (totalAmount > 5000) {
+                        withheldTax = totalAmount * 0.20;
+                    }
+                } else if (incomeType === '92') {
+                    withheldTax = totalAmount * 0.20;
+                }
+            }
+            
+            const netAmount = totalAmount - withheldTax - healthPremium;
+            
+            // 國籍標記
+            const nat1 = nationality === 'national' ? '■' : '□';
+            const nat2 = nationality === 'foreign_resident' ? '■' : '□';
+            const nat3 = nationality === 'foreign_nonresident' ? '■' : '□';
+            
+            // 所得類別標記 (滿183天區塊)
+            const cat50 = (incomeType === '50' && isResident) ? '■' : '□';
+            const cat9A = (incomeType === '9A' && isResident) ? '■' : '□';
+            const cat9B = (incomeType === '9B' && isResident) ? '■' : '□';
+            const cat92 = (incomeType === '92' && isResident) ? '■' : '□';
+            
+            // 所得類別標記 (未滿183天區塊)
+            const cat50_less = (incomeType === '50' && !isResident) ? '■' : '□';
+            const cat9A_less = (incomeType === '9A' && !isResident) ? '■' : '□';
+            const cat9B_less = (incomeType === '9B' && !isResident) ? '■' : '□';
+            const cat92_less = (incomeType === '92' && !isResident) ? '■' : '□';
+            
+            // 付款方式標記
+            let method1 = '□', method2 = '□', method3 = '□', method4 = '□';
+            if (paymentMethod === '現金') method1 = '■';
+            else if (paymentMethod === '匯款') method2 = '■';
+            else if (paymentMethod === '支票') method3 = '■';
+            else if (paymentMethod === '禮券') method4 = '■';
+            
+            // 生成表格
+            const output = `
+                <table style="border-collapse:collapse;margin:auto;" cellspacing="0">
+                    <tbody>
+                        <tr style="height:30pt">
+                            <td style="width:57pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" rowspan="3">
+                                <p style="padding-top: 9pt;text-indent: 0pt;text-align: left;"><br></p>
+                                <p class="s2" style="text-indent: -4pt;line-height: 129%;text-align: center;">所得人資料</p>
+                            </td>
+                            <td style="width:105pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt;border-bottom-color:white;">
+                                <p style="padding-top: 4pt;text-indent: 0pt;text-align: left;"><br></p>
+                                <p class="s3" style="padding-left: 5pt;text-indent: 0pt;text-align: left;margin: 0;"><span id="data-nationality-1">${nat1}</span>本國籍</p>
+                            </td>
+                            <td style="width:157pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 7pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">姓名：<span id="data-name">${name}</span></p>
+                            </td>
+                            <td class="need-adjust" style="width:206pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin-bottom: 0;">身分證字號：<span id="data-id">${idNumber}</span></p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 12pt;text-align: left;margin: 0;">(居留證/護照號碼)</p>
+                            </td>
+                        </tr>
+                        <tr style="height:24pt">
+                            <td style="width:105pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" rowspan="2">
+                                <p class="s3" style="padding-top: 3pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-nationality-2">${nat2}</span>外國籍在台滿 183 天</p>
+                                <p class="s3" style="padding-top: 6pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-nationality-3">${nat3}</span>外國籍在台未滿 183 天</p>
+                            </td>
+                            <td style="width:363pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="3">
+                                <p class="s2" style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">戶籍地址：<span id="data-address">${address}</span></p>
+                            </td>
+                        </tr>
+                        <tr style="height:24pt">
+                            <td style="width:363pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:2pt" colspan="3">
+                                <p class="s2" style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">連絡電話：<span id="data-phone">${phone}</span></p>
+                            </td>
+                        </tr>
+                        <tr style="height:34pt">
+                            <td style="width:57pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:2pt">
+                                <p class="s2" style="padding-top: 5pt;padding-left: 2pt;text-indent: 0pt;text-align: center;">勞務內容：</p>
+                            </td>
+                            <td style="width:105pt;border-top-style:solid;border-top-width:2pt;border-bottom-style:solid;border-bottom-width:2pt">
+                                <p style="padding-top: 5pt;padding-left: 2pt;text-indent: 0pt;text-align: left;"><span id="data-service">${serviceDesc}</span></p>
+                            </td>
+                            <td style="width:21pt;border-top-style:solid;border-top-width:2pt;border-bottom-style:solid;border-bottom-width:2pt">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                            </td>
+                            <td style="width:75pt;border-top-style:solid;border-top-width:2pt;border-bottom-style:solid;border-bottom-width:2pt">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                            </td>
+                            <td style="width:267pt;border-top-style:solid;border-top-width:2pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:2pt">
+                                <p class="s2" style="padding-top: 5pt;padding-left: 31pt;text-indent: 0pt;text-align: left;">期間：自 <span id="data-start">${startDate}</span>至<span id="data-end">${endDate}</span></p>
+                            </td>
+                        </tr>
+                        <tr style="height:21pt">
+                            <td style="width:57pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                            </td>
+                            <td style="width:126pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;text-indent: 0pt;text-align: center;">類別</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">注意事項：單次給付(同日、同筆費用)</p>
+                            </td>
+                        </tr>
+                        <tr style="height:73pt">
+                            <td style="width:80pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt" rowspan="2">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                                <p class="s2" style="padding-left: 10pt;padding-right: 10pt;text-indent: 0pt;line-height: 129%;text-align: center;">所得類別</p>
+                                <p style="padding-left: 9pt;padding-right: 10pt;text-indent: 0pt;text-align: center;">(本國籍、在台滿 183 天)</p>
+                                <p class="s3" style="padding-left: 9pt;padding-right: 10pt;text-indent: 0pt;line-height: 12pt;text-align: center;"></p>
+                            </td>
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;padding-right: 51pt;text-indent: 0pt;line-height: 129%;text-align: left;"><span id="data-category-50">${cat50}</span>50 薪資所得<br>兼職人員薪資。</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;padding-right: 25pt;text-indent: 0pt;line-height: 129%;text-align: left;margin-bottom: 0;">全數計入所得，但可扣除薪資特別扣除額(114 年為 21.8 萬元) 。</p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin: 0;">達 88,501 元，須代扣所得稅 5%。</p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin: 0;">金額達基本工資(114 年為 28,590 元)，須負擔 2.11%補充保費。</p>
+                                <p class="s2" style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin: 0;">提供職業工會的健保加保證明，不須扣 2.11%補充保費。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:73pt">
+                            <td style="width:250pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: justify;"><span id="data-category-9A">${cat9A}</span>9A 執行業務所得</p>
+                                <p class="s2" style="padding-left: 5pt;padding-right: 11pt;text-indent: 0pt;line-height: 12pt;text-align: justify;margin-bottom: 0;">以專業能力取得之酬勞。包含律師、工程師、節目製作人等。</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;padding-right: 25pt;text-indent: 0pt;line-height: 129%;text-align: left;margin-bottom: 0;">無免稅額，扣除所屬類別費用率後計入個人所得。</p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin: 0;">達 20,010 元，需代扣所得稅 10%。</p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin: 0;">達 20,000 元，需扣繳 2.11%補充保費。</p>
+                                <p class="s2" style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin: 0;">提供職業工會的健保加保證明，不須扣 2.11%補充保費。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:73pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <br>
+                            </td>
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-category-9B">${cat9B}</span>9B 稿費</p>
+                                <p class="s2" style="padding-top: 4pt;padding-left: 5pt;padding-right: 21pt;text-indent: 0pt;line-height: 129%;text-align: left;">包含顧問費、演講費、出席費、稿費。</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;padding-right: 25pt;text-indent: 0pt;line-height: 129%;text-align: left;margin-bottom: 0;">可先扣 18 萬免稅額，再扣除 30%費用後計入個人所得。</p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin: 0;">達 20,010 元，需代扣所得稅 10%。</p>
+                                <p class="s2" style="padding-left: 5pt;text-indent: 0pt;line-height: 14pt;text-align: left;margin: 0;">達 20,000 元，需扣繳 2.11%補充保費。</p>
+                                <p class="s2" style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin: 0;">提供職業工會的健保加保證明，不須扣 2.11%補充保費。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:20pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                            </td>
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-category-92">${cat92}</span>92 其他所得</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">不須扣繳、不須 2.11%補充保費。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:21pt">
+                            <td style="width:57pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" rowspan="5">
+                                <p style="padding-top: 4pt;text-indent: 0pt;text-align: left;"><br></p>
+                                <p class="s2" style="padding-left: 10pt;padding-right: 10pt;text-indent: 0pt;line-height: 129%;text-align: center;">所得類別</p>
+                                <p class="s3" style="padding-top: 1pt;padding-left: 9pt;padding-right: 10pt;text-indent: 0pt;line-height: 161%;text-align: center;">(在台未滿 183 天)</p>
+                            </td>
+                            <td style="width:126pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;text-indent: 0pt;text-align: center;">類別</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">注意事項：須於 10 日內申報。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:20pt">
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-category-50-less183">${cat50_less}</span>50 薪資所得</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">114 年薪資 42,885 元以下扣繳 6%、逾 42,885 元扣繳 18%。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:20pt">
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-category-9A-less183">${cat9A_less}</span>9A 執行業務所得</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">均須扣繳 20%。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:20pt">
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-category-9B-less183">${cat9B_less}</span>9B 稿費</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">領款金額不超過 5,000 元不須扣繳，逾 5,000 元須扣繳 20%。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:21pt">
+                            <td style="width:126pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><span id="data-category-92-less183">${cat92_less}</span>92 其他所得</p>
+                            </td>
+                            <td style="width:342pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:2pt" colspan="2">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">均須扣繳 20%。</p>
+                            </td>
+                        </tr>
+                        <tr style="height:9pt">
+                            <td style="width:57pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                            </td>
+                            <td style="width:262pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                            </td>
+                            <td style="width:206pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" rowspan="2">
+                                <p class="s2" style="padding-top: 2pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">領款人：</p>
+                                <p style="padding-top: 10pt;text-indent: 0pt;text-align: left;"><br></p>
+                                <p class="s2" style="padding-right: 4pt;text-indent: 0pt;text-align: right;">(簽名或蓋章)</p>
+                            </td>
+                        </tr>
+                        <tr style="height:37pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt" rowspan="2">
+                                <p class="s2" style="padding-top: 11pt;text-indent: 0pt;line-height: 129%;text-align: center;">領款金額</p>
+                            </td>
+                            <td style="width:262pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3" rowspan="2">
+                                <div id="l2" style="margin:0;">
+                                    <p class="s2" style="padding-top: 2pt;padding-left: 23pt;text-indent: -17pt;text-align: left;">支領金額： 新台幣 &nbsp;<span id="data-totalPrice" style="margin:5px 0px;" class="s4">${totalAmount.toFixed(0)}</span>&nbsp;元</p>
+                                    <p class="s2" style="padding-top: 2pt;padding-left: 23pt;text-indent: -17pt;text-align: left;">代扣所得稅：新台幣 &nbsp;<span id="data-incomePrice" style="margin:5px 0px;" class="s4">${withheldTax.toFixed(0)}</span>&nbsp;元</p>
+                                    <p class="s2" style="padding-top: 4pt;padding-left: 23pt;text-indent: -17pt;text-align: left;">二代健保： 新台幣 &nbsp;<span id="data-insurancePrice" style="margin:5px 0px;" class="s4">${healthPremium.toFixed(0)}</span>&nbsp;元</p>
+                                    <p class="s2" style="padding-top: 4pt;padding-left: 23pt;text-indent: -17pt;text-align: left;">支領淨額： 新台幣 &nbsp;<span id="data-payPrice" style="margin:5px 0px;" class="s5">${netAmount.toFixed(0)}</span>&nbsp;元</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr style="height:18pt">
+                            <td style="width:206pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:2pt">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">會計/經辦人：</p>
+                            </td>
+                        </tr>
+                        <tr style="height:19pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <br>
+                            </td>
+                            <td style="width:262pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin:0px">銀行名稱：<span id="bank-name">${bankName}</span></p>
+                            </td>
+                            <td style="width:206pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:2pt">
+                                <br>
+                            </td>
+                        </tr>
+                        <tr style="height:19pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <br>
+                            </td>
+                            <td style="width:262pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin:0px">銀行分行：<span id="bank-branch">${branch}</span></p>
+                            </td>
+                            <td style="width:206pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:2pt">
+                                <br>
+                            </td>
+                        </tr>
+                        <tr style="height:19pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <br>
+                            </td>
+                            <td style="width:262pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin:0px">所得人帳號：<span id="bank-account">${accountNumber}</span></p>
+                            </td>
+                            <td style="width:206pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:2pt">
+                                <br>
+                            </td>
+                        </tr>
+                        <tr style="height:19pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <br>
+                            </td>
+                            <td style="width:262pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin:0px">所得人戶名：<span id="bank-user">${accountHolder}</span></p>
+                            </td>
+                            <td style="width:206pt;border-left-style:solid;border-left-width:1pt;border-right-style:solid;border-right-width:2pt">
+                                <br>
+                            </td>
+                        </tr>
+                        <tr style="height:19pt">
+                            <td style="width:57pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt">
+                                <br>
+                            </td>
+                            <td style="width:262pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p class="s2" style="padding-top: 1pt;padding-left: 5pt;text-indent: 0pt;text-align: left;margin:0px">付款方式：<span id="method-1">${method1}</span>現金 <span id="method-2">${method2}</span>匯款 <span id="method-3">${method3}</span>支票 <span id="method-4">${method4}</span>禮券</p>
+                            </td>
+                            <td style="width:206pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:2pt">
+                                <br>
+                            </td>
+                        </tr>
+                        <tr style="height:20pt">
+                            <td style="width:525pt;border-top-style:solid;border-top-width:2pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="5">
+                                <p class="s2" style="padding-top: 2pt;text-indent: 0pt;text-align: center;margin:0;">身分證(居留證/護照)影本黏貼處</p>
+                            </td>
+                        </tr>
+                        <tr style="height:19pt">
+                            <td style="width:258pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p class="s2" style="padding-top: 2pt;padding-right: 1pt;text-indent: 0pt;text-align: center;">正面</p>
+                            </td>
+                            <td style="width:267pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:2pt" colspan="3">
+                                <p class="s2" style="padding-top: 2pt;text-indent: 0pt;text-align: center;">反面</p>
+                            </td>
+                        </tr>
+                        <tr style="height:141pt">
+                            <td style="width:258pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:2pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:1pt" colspan="3">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                            </td>
+                            <td style="width:267pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:2pt;border-right-style:solid;border-right-width:2pt" colspan="3">
+                                <p style="text-indent: 0pt;text-align: left;"><br></p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('output').innerHTML = output;
+            
+            // 生成 PDF 從輸出區 HTML
+            const element = document.getElementById('output');
+            const opt = {
+                margin:       0.5,
+                filename:     '勞務報酬單.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // 生成 PDF Blob 並用於預覽
+            html2pdf().from(element).set(opt).output('bloburl').then(function(url) {
+                pdfBlobUrl = url;
+                document.getElementById('pdfPreview').src = pdfBlobUrl;
+                document.getElementById('pdfPreview').style.display = 'block';
+                document.getElementById('downloadPdf').style.display = 'block';
+            });
+            
+            alert('勞務報酬單已產生！表格格式已匹配提供的HTML範本，稅務計算基於2026年規則，實際請驗證財政部規定。');
+        }
+
+        function downloadPdfFile() {
+            if (pdfBlobUrl) {
+                const a = document.createElement('a');
+                a.href = pdfBlobUrl;
+                a.download = '勞務報酬單.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+    </script>
+</body>
+</html>

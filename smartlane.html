@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta id="meta-desc" name="description" content="SmartLane｜即時分析車流的雲端服務方案，提供車道級別指標、車道建議、告警與 API 串接。" />
+  <title>SmartLane｜即時車流分析與車道建議</title>
+  <style>
+    :root{
+      --bg:#f6fbff;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#4b5a77;
+      --line:rgba(26,60,120,.12);
+      --primary:#2f9bff;
+      --primary2:#84ddff;
+      --good:#4ff0c8;
+      --warn:#ffd36b;
+      --bad:#ff6b8b;
+      --shadow: 0 18px 60px rgba(10,40,90,.12);
+      --shadow2: 0 10px 28px rgba(10,40,90,.10);
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1120px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 760px at 20% -10%, rgba(47,155,255,.22), transparent 55%),
+        radial-gradient(900px 560px at 90% 10%, rgba(132,221,255,.22), transparent 60%),
+        radial-gradient(900px 560px at 70% 90%, rgba(79,240,200,.14), transparent 60%),
+        var(--bg);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 18px}
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:saturate(1.2) blur(12px);
+      background:rgba(246,251,255,.72);
+      border-bottom:1px solid var(--line);
+    }
+    .row{display:flex; align-items:center; justify-content:space-between; height:68px}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:900}
+    .logo{
+      width:38px;height:38px;border-radius:14px;
+      background: conic-gradient(from 180deg, var(--primary), var(--primary2), var(--good), var(--primary));
+      box-shadow:0 10px 20px rgba(47,155,255,.22);
+      position:relative; overflow:hidden;
+    }
+    .logo:after{
+      content:""; position:absolute; inset:-20%;
+      background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.75), transparent 52%);
+      transform:rotate(18deg);
+    }
+    .links{display:flex; gap:16px; align-items:center}
+    .links a{padding:10px 12px; border-radius:12px; color:var(--muted); transition:.15s ease}
+    .links a:hover{background:rgba(47,155,255,.10); color:var(--text)}
+    .langSwitch{display:inline-flex; gap:8px; align-items:center; margin-left:6px}
+    .langBtn{
+      padding:8px 10px; border-radius:10px; font-size:12.5px; font-weight:800;
+      border:1px solid rgba(47,155,255,.22);
+      background:rgba(255,255,255,.7);
+      color:var(--muted);
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .langBtn.is-active{background:rgba(47,155,255,.18); color:var(--text)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 16px; border-radius:14px;
+      border:1px solid rgba(47,155,255,.28);
+      background: linear-gradient(180deg, rgba(47,155,255,.18), rgba(47,155,255,.08));
+      box-shadow:0 12px 30px rgba(47,155,255,.12);
+      font-weight:800;
+      transition:.15s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:0 18px 38px rgba(47,155,255,.16)}
+    .btn.primary{
+      border:0;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      color:#fff;
+      box-shadow:0 18px 50px rgba(47,155,255,.28);
+    }
+    .menuBtn{display:none}
+    .mnav{display:none; border-top:1px solid var(--line); padding:10px 0 14px}
+    .mnav a{display:block; padding:12px 12px; border-radius:14px; color:var(--muted)}
+    .mnav a:hover{background:rgba(47,155,255,.10); color:var(--text)}
+    .show{display:block}
+
+    .hero{padding:60px 0 18px}
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns: 1.05fr .95fr;
+      align-items:stretch;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(47,155,255,.28);
+      background:rgba(255,255,255,.58);
+      color:var(--muted);
+      font-weight:700;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background:var(--good);
+      box-shadow:0 0 0 5px rgba(79,240,200,.18);
+      animation:pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1); opacity:1}
+      50%{transform:scale(1.15); opacity:.85}
+    }
+    h1{margin:14px 0 10px; font-size:44px; line-height:1.1; letter-spacing:-.02em}
+    .lead{margin:0 0 18px; color:var(--muted); font-size:16.5px; line-height:1.65}
+    .actions{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.72));
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      padding:16px;
+      position:relative; overflow:hidden;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; font-weight:900;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(47,155,255,.12);
+      border: 1px solid rgba(47,155,255,.18);
+      color:#0e2a55;
+    }
+    .mini{
+      border-radius: var(--radius);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      box-shadow: var(--shadow2);
+      padding:12px;
+    }
+    .statusRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .chipRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .chip{
+      font-size:12px; font-weight:900;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid rgba(26,60,120,.12);
+      background:rgba(255,255,255,.78);
+      color:#173158;
+    }
+    .meter{
+      height:10px; border-radius:999px; overflow:hidden;
+      background: rgba(26,60,120,.10);
+      border:1px solid rgba(26,60,120,.10);
+    }
+    .bar{
+      height:100%;
+      width:62%;
+      background: linear-gradient(90deg, var(--good), var(--primary2));
+      border-radius:999px;
+      transition:width .6s ease;
+    }
+    .laneGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px}
+    .lane{
+      padding:12px; border-radius:16px;
+      border:1px solid rgba(26,60,120,.12);
+      background:rgba(255,255,255,.78);
+      box-shadow: var(--shadow2);
+    }
+    .lane strong{display:block; font-size:13px}
+    .lane span{color:var(--muted); font-size:12.5px}
+    section{padding:44px 0}
+    .sectionHead{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px}
+    .sectionHead h2{margin:0; font-size:28px; letter-spacing:-.01em}
+    .sectionHead p{margin:0; color:var(--muted); line-height:1.6; max-width:68ch}
+    .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+    .grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+    .box{
+      background:rgba(255,255,255,.78);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding:16px;
+      position:relative; overflow:hidden;
+    }
+    .box h3{margin:10px 0 8px; font-size:18px}
+    .box p{margin:0; color:var(--muted); line-height:1.65}
+    .list{margin:10px 0 0; padding:0 0 0 18px; color:var(--muted); line-height:1.7}
+    .cta{
+      padding:44px 0 64px;
+    }
+    .ctaBox{
+      background: linear-gradient(135deg, rgba(47,155,255,.18), rgba(79,240,200,.12));
+      border:1px solid rgba(47,155,255,.18);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding:22px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      overflow:hidden;
+      position:relative;
+    }
+    footer{
+      padding:22px 0 34px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+    }
+    .footRow{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .small{font-size:12.5px}
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      h1{font-size:40px}
+    }
+    @media (max-width: 760px){
+      .links{display:none}
+      .menuBtn{display:inline-flex}
+      .grid3{grid-template-columns:1fr}
+      .grid2{grid-template-columns:1fr}
+      .laneGrid{grid-template-columns:1fr}
+      h1{font-size:36px}
+      .ctaBox{flex-direction:column; align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <div class="row">
+        <a class="brand" href="#top" aria-label="SmartLane 首頁" data-i18n-attr="aria-label:nav.homeAria">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div style="line-height:1">SmartLane</div>
+            <div class="small" style="color:var(--muted); font-weight:900; margin-top:2px;" data-i18n="nav.subtitle">Realtime Traffic Insight</div>
+          </div>
+        </a>
+        <nav class="links" aria-label="主要導覽" data-i18n-attr="aria-label:nav.aria">
+          <a href="#features" data-i18n="nav.features">功能</a>
+          <a href="#how" data-i18n="nav.how">怎麼運作</a>
+          <a href="#usecases" data-i18n="nav.usecases">適用場景</a>
+          <a href="#api" data-i18n="nav.api">API 串接</a>
+          <a href="#contact" data-i18n="nav.contact">聯絡</a>
+          <div class="langSwitch" aria-label="Language switch" data-i18n-attr="aria-label:nav.langAria">
+            <button class="langBtn" type="button" data-lang="zh-Hant">中</button>
+            <button class="langBtn" type="button" data-lang="en">EN</button>
+          </div>
+        </nav>
+        <a class="btn menuBtn" id="menuBtn" href="javascript:void(0)" aria-label="開啟選單" data-i18n="nav.menu" data-i18n-attr="aria-label:nav.menuAria">選單 ☰</a>
+      </div>
+      <div class="mnav" id="mnav" aria-label="手機導覽" data-i18n-attr="aria-label:nav.mobileAria">
+        <a href="#features" data-i18n="nav.features">功能</a>
+        <a href="#how" data-i18n="nav.how">怎麼運作</a>
+        <a href="#usecases" data-i18n="nav.usecases">適用場景</a>
+        <a href="#api" data-i18n="nav.api">API 串接</a>
+        <a href="#contact" data-i18n="nav.contact">聯絡</a>
+        <a class="btn primary" style="margin:10px 12px 0; width:calc(100% - 24px);" href="#contact" data-i18n="nav.demo">預約 Demo</a>
+        <div class="langSwitch" style="margin:10px 12px 0;" aria-label="Language switch" data-i18n-attr="aria-label:nav.langAria">
+          <button class="langBtn" type="button" data-lang="zh-Hant">中</button>
+          <button class="langBtn" type="button" data-lang="en">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <div class="grid">
+          <div>
+            <div class="pill" data-i18n="hero.pill"><span class="dot"></span>即時車流分析｜車道建議｜告警與報表</div>
+            <h1 data-i18n-html="hero.title">用影像即時看懂車流<br/>把塞車變成可預測</h1>
+            <p class="lead">
+              <span data-i18n="hero.lead.line1">SmartLane 以雲端即時分析道路影像，輸出「速度 / 密度 / 車流量 / 壅塞趨勢」等指標，</span>
+              <span data-i18n="hero.lead.line2">並提供車道級別的建議與事件告警，支援 Dashboard 與 API 串接。</span>
+            </p>
+            <div class="actions">
+              <a class="btn primary" href="#features" data-i18n="hero.actions.features">看功能</a>
+              <a class="btn" href="#how" data-i18n="hero.actions.how">看架構</a>
+            </div>
+          </div>
+
+          <div class="card" aria-label="即時狀態卡（範例）" data-i18n-attr="aria-label:hero.cardAria">
+            <div class="tag" data-i18n="hero.cardTag">Live Status（示意）</div>
+
+            <div class="statusRow">
+              <div>
+                <div style="font-weight:900; font-size:18px; margin-top:8px;" data-i18n="hero.cardRoute">目前路段：示範路段 A</div>
+                <div class="small" style="color:var(--muted); font-weight:800;"><span data-i18n="hero.cardUpdate">更新：</span><span id="ts">--:--:--</span></div>
+              </div>
+              <div class="chip" id="flowChip" style="border-color:rgba(79,240,200,.35);"><span data-i18n="hero.cardStatusLabel">狀態：</span><span id="flowState">順暢</span></div>
+            </div>
+
+            <div class="mini" style="margin-top:12px;">
+              <div class="small" style="display:flex; justify-content:space-between; font-weight:900;">
+                <span data-i18n="hero.cardScoreLabel">壅塞指數（0～100）</span><span id="score">38</span>
+              </div>
+              <div class="meter" style="margin-top:8px;"><div class="bar" id="bar"></div></div>
+              <div class="chipRow">
+                <div class="chip"><span data-i18n="hero.cardSpeedLabel">平均速度：</span><span id="spd">72</span> <span data-i18n="hero.cardSpeedUnit">km/h</span></div>
+                <div class="chip"><span data-i18n="hero.cardVolumeLabel">車流量：</span><span id="vol">1260</span> <span data-i18n="hero.cardVolumeUnit">/h</span></div>
+                <div class="chip"><span data-i18n="hero.cardQueueLabel">預估回堵：</span><span id="q">短</span></div>
+              </div>
+            </div>
+
+            <div class="mini" style="margin-top:12px;">
+              <div style="font-weight:900;" data-i18n="hero.cardLaneTitle">車道建議（示意）</div>
+              <div class="laneGrid">
+                <div class="lane" id="l1"><strong data-i18n="hero.cardLane1">Lane 1</strong><span data-i18n="hero.cardLaneKeep">建議：保持</span></div>
+                <div class="lane" id="l2"><strong data-i18n="hero.cardLane2">Lane 2</strong><span data-i18n="hero.cardLanePrefer">建議：優先</span></div>
+                <div class="lane" id="l3"><strong data-i18n="hero.cardLane3">Lane 3</strong><span data-i18n="hero.cardLaneAvoid">建議：避免</span></div>
+              </div>
+              <p class="small" style="color:var(--muted); margin:10px 0 0;">
+                <span data-i18n="hero.cardNote">※ 以上為 UI 示意，可改為你的真實路段、攝影機、指標與建議邏輯。</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="features.title">核心功能</h2>
+            <p data-i18n="features.desc">以「車道級」即時指標為中心，搭配預測與告警，讓使用者在最短時間做出最佳路線/調度決策。</p>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="box">
+            <div class="tag" data-i18n="features.card1.tag">Realtime</div>
+            <h3 data-i18n="features.card1.title">即時車流指標</h3>
+            <p data-i18n="features.card1.desc">速度、密度、車流量、壅塞指數與趨勢，支援多路段/多攝影機。</p>
+            <ul class="list">
+              <li data-i18n="features.card1.list1">秒級更新（可配置）</li>
+              <li data-i18n="features.card1.list2">歷史回放與趨勢</li>
+              <li data-i18n="features.card1.list3">異常波動偵測</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="features.card2.tag">Recommendation</div>
+            <h3 data-i18n="features.card2.title">車道建議</h3>
+            <p data-i18n="features.card2.desc">以車道層級計算通行效率，輸出「優先 / 保持 / 避免」與原因。</p>
+            <ul class="list">
+              <li data-i18n="features.card2.list1">車道級別建議</li>
+              <li data-i18n="features.card2.list2">路段/時段最佳化</li>
+              <li data-i18n="features.card2.list3">可串接導引顯示</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="features.card3.tag">Alert</div>
+            <h3 data-i18n="features.card3.title">事件告警</h3>
+            <p data-i18n="features.card3.desc">事故、回堵、突發壅塞等事件即時推播到群組/系統。</p>
+            <ul class="list">
+              <li data-i18n="features.card3.list1">門檻與規則可調</li>
+              <li data-i18n="features.card3.list2">Webhook / Email / IM</li>
+              <li data-i18n="features.card3.list3">告警追蹤與回報</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="how.title">怎麼運作</h2>
+            <p data-i18n="how.desc">從影像到指標到決策：邊緣或雲端皆可，並提供 API 與 Dashboard 快速落地。</p>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="box">
+            <div class="tag" data-i18n="how.card1.tag">Pipeline</div>
+            <h3 data-i18n="how.card1.title">影像 → 偵測 → 指標 → 告警</h3>
+            <p data-i18n="how.card1.desc">把攝影機影像轉為可用的車流資料與事件，並持續監控品質與效能。</p>
+            <ul class="list">
+              <li data-i18n="how.card1.list1">車輛偵測 / 追蹤 / 計數</li>
+              <li data-i18n="how.card1.list2">速度與密度估計</li>
+              <li data-i18n="how.card1.list3">壅塞指數與趨勢</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="how.card2.tag">Deployment</div>
+            <h3 data-i18n="how.card2.title">雲端原生架構</h3>
+            <p data-i18n="how.card2.desc">可隨需求擴充：更多攝影機、更多路段、更長歷史資料與更高併發。</p>
+            <ul class="list">
+              <li data-i18n="how.card2.list1">多租戶與權限控管</li>
+              <li data-i18n="how.card2.list2">可觀測性（監控/日誌）</li>
+              <li data-i18n="how.card2.list3">高可用與自動擴縮</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="usecases">
+      <div class="wrap">
+        <div class="sectionHead">
+          <div>
+            <h2 data-i18n="usecases.title">適用場景</h2>
+            <p data-i18n="usecases.desc">交通管理、隧道/快速道路、活動人潮疏運、施工與車道管制…只要有影像就能導入。</p>
+          </div>
+        </div>
+        <div class="grid3">
+          <div class="box">
+            <div class="tag" data-i18n="usecases.card1.tag">Gov / ITS</div>
+            <h3 data-i18n="usecases.card1.title">交通管理與疏運</h3>
+            <p data-i18n="usecases.card1.desc">用即時指標與告警，縮短反應時間，提升通行效率。</p>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="usecases.card2.tag">Tunnel</div>
+            <h3 data-i18n="usecases.card2.title">隧道與瓶頸路段</h3>
+            <p data-i18n="usecases.card2.desc">車道級建議與趨勢預測，避免回堵擴散。</p>
+          </div>
+          <div class="box">
+            <div class="tag" data-i18n="usecases.card3.tag">Enterprise</div>
+            <h3 data-i18n="usecases.card3.title">園區/停車/物流</h3>
+            <p data-i18n="usecases.card3.desc">把出入口車流變成可量化 KPI，支援調度與規劃。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" id="contact">
+      <div class="wrap">
+        <div class="ctaBox">
+          <div style="position:relative; z-index:1;">
+            <h3 style="margin:0 0 6px; font-size:22px;" data-i18n="cta.title">想把路況做到「即時可用」？</h3>
+            <p style="margin:0; color:var(--muted); line-height:1.6;">
+              <span data-i18n="cta.desc">讓我們用 Demo 與 PoC 先把一個代表路段跑起來，再逐步擴到更多路段與攝影機。</span>
+            </p>
+            <p class="small" style="margin-top:8px;" data-i18n="cta.note">（此處可改成表單、Email、Line、或聯絡資訊）</p>
+          </div>
+          <div class="actions" style="position:relative; z-index:1;">
+            <a class="btn primary" href="mailto:hello@smartlane.example" onclick="return false;" data-i18n="cta.demo">預約 Demo</a>
+            <a class="btn" href="#features" data-i18n="cta.back">回到功能</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <div class="footRow">
+          <div class="brand">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+              <div style="font-weight:900; color:var(--text)">SmartLane</div>
+              <div class="small" data-i18n="footer.copyright">© <span id="y"></span> SmartLane. Powered by CloudParty.</div>
+            </div>
+          </div>
+          <div class="small" data-i18n="footer.tagline">Realtime Traffic Analytics · Lane Recommendation · Alerts · API</div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="smartlane-i18n.js"></script>
+  <script>
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const id = a.getAttribute('href');
+        if(!id || id === "#") return;
+        const el = document.querySelector(id);
+        if(!el) return;
+        e.preventDefault();
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+        const mnav = document.getElementById('mnav');
+        if(mnav) mnav.classList.remove('show');
+      });
+    });
+
+    // Mobile menu
+    const menuBtn = document.getElementById('menuBtn');
+    const mnav = document.getElementById('mnav');
+    if(menuBtn && mnav){
+      menuBtn.addEventListener('click', ()=> mnav.classList.toggle('show'));
+    }
+
+    // Fake live ticker (demo UI)
+    const ts = document.getElementById('ts');
+    const scoreEl = document.getElementById('score');
+    const bar = document.getElementById('bar');
+    const spd = document.getElementById('spd');
+    const vol = document.getElementById('vol');
+    const q = document.getElementById('q');
+    const flowChip = document.getElementById('flowChip');
+    const flowState = document.getElementById('flowState');
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+
+    function update(){
+      const stored = localStorage.getItem("lang");
+      const lang = stored && i18n[stored] ? stored : "zh-Hant";
+      const dict = i18n[lang] || i18n["zh-Hant"];
+      const d = new Date();
+      ts.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+      // Random-ish demo values
+      const score = Math.max(8, Math.min(92, Math.round(30 + 25*Math.sin(Date.now()/3000) + 18*Math.random())));
+      scoreEl.textContent = score;
+      bar.style.width = score + "%";
+
+      const speed = Math.max(12, Math.round(92 - score + (Math.random()*10-5)));
+      spd.textContent = speed;
+
+      const volume = Math.max(300, Math.round(900 + score*8 + (Math.random()*120-60)));
+      vol.textContent = volume;
+
+      const queueKey = score < 40 ? "short" : (score < 70 ? "medium" : "long");
+      q.textContent = dict.hero.queue[queueKey];
+
+      // Status chip
+      if(score < 40){
+        flowState.textContent = dict.hero.status.good;
+        flowChip.style.borderColor = "rgba(79,240,200,.35)";
+      }else if(score < 70){
+        flowState.textContent = dict.hero.status.slow;
+        flowChip.style.borderColor = "rgba(255,211,107,.55)";
+      }else{
+        flowState.textContent = dict.hero.status.bad;
+        flowChip.style.borderColor = "rgba(255,107,139,.55)";
+      }
+    }
+    update();
+    setInterval(update, 1000);
+
+    document.addEventListener("language:change", update);
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
