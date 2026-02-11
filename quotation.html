@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>雲派對 報價單產生器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f6fbff;
+      --panel: #ffffff;
+      --ink: #0b1220;
+      --muted: #4b5a77;
+      --line: rgba(26, 60, 120, 0.12);
+      --brand: #2f9bff;
+      --brand-2: #84ddff;
+      --brand-dark: #0e2a55;
+      --danger: #ff6b8b;
+      --ok: #4ff0c8;
+      --shadow: 0 18px 60px rgba(10, 40, 90, 0.12);
+      --shadow-2: 0 10px 28px rgba(10, 40, 90, 0.1);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 760px at 20% -10%, rgba(47, 155, 255, 0.22), transparent 55%),
+        radial-gradient(900px 560px at 90% 10%, rgba(132, 221, 255, 0.22), transparent 60%),
+        radial-gradient(900px 560px at 70% 90%, rgba(79, 240, 200, 0.14), transparent 60%),
+        var(--bg);
+    }
+
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      color: #fff;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 2vw, 32px);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.96);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.16s ease, filter 0.16s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+    }
+
+    .btn-brand {
+      background: linear-gradient(180deg, rgba(47, 155, 255, 0.18), rgba(47, 155, 255, 0.08));
+      color: #fff;
+      border: 1px solid rgba(47, 155, 255, 0.28);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.1fr) minmax(360px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+    }
+
+    .editor {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .section h2 {
+      font-size: 16px;
+      margin: 0 0 12px;
+      color: var(--brand-dark);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: middle;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background: rgba(47, 155, 255, 0.12);
+      color: #173158;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .items-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-small {
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 0;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.78);
+      color: #173158;
+      border: 1px solid var(--line);
+    }
+
+    .btn-add {
+      background: rgba(47, 155, 255, 0.14);
+      color: #0e2a55;
+      border: 1px solid rgba(47, 155, 255, 0.22);
+    }
+
+    .btn-danger {
+      background: rgba(255, 107, 139, 0.14);
+      color: #7c1033;
+      border: 1px solid rgba(255, 107, 139, 0.2);
+    }
+
+    .totals {
+      margin-top: 8px;
+      display: grid;
+      gap: 4px;
+      justify-items: end;
+      font-size: 14px;
+      color: #173158;
+    }
+
+    .totals strong {
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .checks {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .checks label {
+      font-size: 13px;
+      color: #173158;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .preview-wrap {
+      position: sticky;
+      top: 18px;
+      padding: 14px;
+    }
+
+    .preview-paper {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      min-height: 300px;
+      padding: 26px;
+      color: var(--ink);
+    }
+
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 14px;
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+
+    .preview-title {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.08em;
+      color: var(--brand-dark);
+    }
+
+    .preview-meta {
+      text-align: right;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .preview-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .preview-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .preview-card h3 {
+      margin: 0 0 6px;
+      color: #173158;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .preview-table th,
+    .preview-table td {
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .preview-terms,
+    .preview-bank,
+    .preview-sign {
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.75;
+      color: #173158;
+    }
+
+    .preview-sign {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .signature-box {
+      border-top: 1px solid rgba(26, 60, 120, 0.4);
+      padding-top: 8px;
+      min-height: 28px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ok);
+      min-height: 18px;
+    }
+
+    .hide {
+      display: none !important;
+    }
+
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-wrap {
+        position: static;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        padding: 14px;
+      }
+
+      .grid-2,
+      .preview-columns,
+      .preview-sign {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 18px;
+      }
+
+      .preview-paper {
+        padding: 18px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .hero,
+      .editor {
+        display: none !important;
+      }
+
+      .layout,
+      .panel,
+      .preview-wrap,
+      .preview-paper {
+        display: block;
+        max-width: none;
+        width: 100%;
+        box-shadow: none;
+        border: 0;
+        margin: 0;
+        padding: 0;
+      }
+
+      .preview-paper {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>雲派對 報價單產生器</h1>
+      <div class="toolbar">
+        <button class="btn btn-brand" id="btn-print">列印 / 匯出 PDF</button>
+        <button class="btn btn-ghost" id="btn-save">儲存草稿</button>
+        <button class="btn btn-ghost" id="btn-export">匯出 JSON</button>
+        <button class="btn btn-ghost" id="btn-import">匯入 JSON</button>
+        <input type="file" id="import-file" accept=".json" class="hide" />
+      </div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <section class="layout">
+      <article class="panel editor">
+        <section class="section">
+          <h2>報價資訊</h2>
+          <div class="grid-2">
+            <div class="field">
+              <label for="quote-number">報價單號</label>
+              <input id="quote-number" placeholder="例如 QUO-20260211-001" />
+            </div>
+            <div class="field">
+              <label for="quote-date">報價日期</label>
+              <input id="quote-date" type="date" />
+            </div>
+            <div class="field">
+              <label for="quote-valid-date">有效期限</label>
+              <input id="quote-valid-date" type="date" />
+            </div>
+            <div class="field">
+              <label for="tax-rate">稅率 (%)</label>
+              <input id="tax-rate" type="number" min="0" step="0.1" value="5" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>公司資訊</h2>
+          <div class="grid-2">
+            <div class="field"><label for="company-name">公司名稱</label><input id="company-name" /></div>
+            <div class="field"><label for="company-tax-id">統一編號</label><input id="company-tax-id" /></div>
+            <div class="field"><label for="company-phone">電話</label><input id="company-phone" /></div>
+            <div class="field"><label for="company-email">Email</label><input id="company-email" /></div>
+          </div>
+          <div class="field" style="margin-top:10px;"><label for="company-address">地址</label><input id="company-address" /></div>
+        </section>
+
+        <section class="section">
+          <h2>客戶資訊</h2>
+          <div class="grid-2">
+            <div class="field"><label for="client-name">客戶名稱</label><input id="client-name" /></div>
+            <div class="field"><label for="client-tax-id">統一編號</label><input id="client-tax-id" /></div>
+            <div class="field"><label for="client-phone">電話</label><input id="client-phone" /></div>
+            <div class="field"><label for="client-email">Email</label><input id="client-email" /></div>
+          </div>
+          <div class="field" style="margin-top:10px;"><label for="client-address">地址</label><input id="client-address" /></div>
+        </section>
+
+        <section class="section">
+          <h2>報價項目</h2>
+          <table id="items-table">
+            <thead>
+              <tr>
+                <th style="width: 52px">#</th>
+                <th>品項名稱</th>
+                <th style="width: 88px">數量</th>
+                <th style="width: 88px">單位</th>
+                <th style="width: 120px">單價</th>
+                <th style="width: 120px">小計</th>
+                <th style="width: 72px">操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="items-actions">
+            <button type="button" class="btn-small btn-add" id="btn-add-item">新增項目</button>
+          </div>
+          <div class="totals">
+            <div>小計：<span id="subtotal">0</span></div>
+            <div>稅額：<span id="tax">0</span></div>
+            <div><strong>總計：<span id="grand-total">0</span></strong></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>條款與匯款資訊</h2>
+          <div id="terms-list"></div>
+          <div class="items-actions">
+            <button type="button" class="btn-small btn-add" id="btn-add-term">新增條款</button>
+            <button type="button" class="btn-small" id="btn-load-terms">套用常用條款</button>
+          </div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="field"><label for="bank-name">銀行</label><input id="bank-name" /></div>
+            <div class="field"><label for="bank-account">帳號</label><input id="bank-account" /></div>
+            <div class="field" style="grid-column: 1 / -1;"><label for="bank-holder">戶名</label><input id="bank-holder" /></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>顯示設定</h2>
+          <div class="checks">
+            <label><input type="checkbox" id="show-terms" checked /> 顯示條款</label>
+            <label><input type="checkbox" id="show-signature" checked /> 顯示簽章欄位</label>
+          </div>
+        </section>
+      </article>
+
+      <aside class="panel preview-wrap">
+        <div class="preview-paper" id="preview"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "quoteDraft.v2";
+    const defaultTerms = [
+      "報價有效期限為 30 天。",
+      "本報價單未含未列之額外客製需求。",
+      "付款條件：簽約後 50%，驗收後 50%。"
+    ];
+
+    const state = {
+      itemCount: 0
+    };
+
+    const ids = [
+      "quote-number", "quote-date", "quote-valid-date", "tax-rate",
+      "company-name", "company-tax-id", "company-phone", "company-email", "company-address",
+      "client-name", "client-tax-id", "client-phone", "client-email", "client-address",
+      "bank-name", "bank-account", "bank-holder",
+      "show-terms", "show-signature"
+    ];
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("zh-TW");
+    }
+
+    function nowDate() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function plusDays(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function setStatus(msg, keepMs = 1800) {
+      const el = document.getElementById("status");
+      el.textContent = msg;
+      if (keepMs > 0) {
+        window.clearTimeout(setStatus.timer);
+        setStatus.timer = window.setTimeout(() => {
+          el.textContent = "";
+        }, keepMs);
+      }
+    }
+
+    function createItemRow(data = {}) {
+      state.itemCount += 1;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="index"></td>
+        <td><input class="item-name" placeholder="品項名稱" value="${data.name || ""}" /></td>
+        <td><input class="item-qty" type="number" min="0" step="1" value="${data.quantity ?? 1}" /></td>
+        <td><input class="item-unit" value="${data.unit || "式"}" /></td>
+        <td><input class="item-price" type="number" min="0" step="1" value="${data.price ?? 0}" /></td>
+        <td class="item-subtotal">0</td>
+        <td><button type="button" class="btn-small btn-danger btn-remove-item">刪除</button></td>
+      `;
+
+      tr.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("input", onAnyInput);
+      });
+
+      tr.querySelector(".btn-remove-item").addEventListener("click", () => {
+        tr.remove();
+        renumberRows();
+        calculateTotals();
+      });
+
+      document.querySelector("#items-table tbody").appendChild(tr);
+      renumberRows();
+      calculateTotals();
+    }
+
+    function renumberRows() {
+      const rows = document.querySelectorAll("#items-table tbody tr");
+      rows.forEach((row, idx) => {
+        row.querySelector(".index").textContent = idx + 1;
+      });
+      state.itemCount = rows.length;
+    }
+
+    function createTerm(text = "") {
+      const wrap = document.createElement("div");
+      wrap.style.marginTop = "8px";
+      wrap.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;">
+          <textarea class="term-text" placeholder="條款內容">${text}</textarea>
+          <button type="button" class="btn-small btn-danger">刪除</button>
+        </div>
+      `;
+      wrap.querySelector("textarea").addEventListener("input", onAnyInput);
+      wrap.querySelector("button").addEventListener("click", () => {
+        wrap.remove();
+        renderPreview();
+        autoSave();
+      });
+      document.getElementById("terms-list").appendChild(wrap);
+    }
+
+    function calculateTotals() {
+      let subtotal = 0;
+      const rows = document.querySelectorAll("#items-table tbody tr");
+      rows.forEach((row) => {
+        const qty = Number(row.querySelector(".item-qty").value || 0);
+        const price = Number(row.querySelector(".item-price").value || 0);
+        const line = qty * price;
+        subtotal += line;
+        row.querySelector(".item-subtotal").textContent = formatMoney(line);
+      });
+
+      const taxRate = Number(document.getElementById("tax-rate").value || 0) / 100;
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax;
+
+      document.getElementById("subtotal").textContent = formatMoney(subtotal);
+      document.getElementById("tax").textContent = formatMoney(Math.round(tax));
+      document.getElementById("grand-total").textContent = formatMoney(Math.round(total));
+
+      renderPreview();
+      autoSave();
+    }
+
+    function collectData() {
+      const data = {
+        fields: {},
+        items: [],
+        terms: []
+      };
+
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        data.fields[id] = el.type === "checkbox" ? el.checked : el.value;
+      });
+
+      document.querySelectorAll("#items-table tbody tr").forEach((row) => {
+        data.items.push({
+          name: row.querySelector(".item-name").value,
+          quantity: row.querySelector(".item-qty").value,
+          unit: row.querySelector(".item-unit").value,
+          price: row.querySelector(".item-price").value
+        });
+      });
+
+      document.querySelectorAll(".term-text").forEach((el) => {
+        const text = el.value.trim();
+        if (text) data.terms.push(text);
+      });
+
+      return data;
+    }
+
+    function fillData(data) {
+      if (!data || typeof data !== "object") return;
+
+      if (data.fields) {
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (el.type === "checkbox") {
+            el.checked = data.fields[id] !== undefined ? Boolean(data.fields[id]) : el.checked;
+          } else {
+            el.value = data.fields[id] ?? "";
+          }
+        });
+      }
+
+      const tbody = document.querySelector("#items-table tbody");
+      tbody.innerHTML = "";
+      state.itemCount = 0;
+      const items = Array.isArray(data.items) && data.items.length ? data.items : [{ quantity: 1, price: 0, unit: "式" }];
+      items.forEach(createItemRow);
+
+      const termsList = document.getElementById("terms-list");
+      termsList.innerHTML = "";
+      (Array.isArray(data.terms) ? data.terms : []).forEach(createTerm);
+
+      calculateTotals();
+    }
+
+    function renderPreview() {
+      const data = collectData();
+      const taxRate = Number(data.fields["tax-rate"] || 0);
+
+      const subtotalRaw = Number((document.getElementById("subtotal").textContent || "0").replace(/,/g, ""));
+      const taxRaw = Number((document.getElementById("tax").textContent || "0").replace(/,/g, ""));
+      const totalRaw = Number((document.getElementById("grand-total").textContent || "0").replace(/,/g, ""));
+
+      const rowsHtml = data.items.map((item, idx) => {
+        const qty = Number(item.quantity || 0);
+        const price = Number(item.price || 0);
+        const line = qty * price;
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(item.name || "")}</td>
+            <td>${qty}</td>
+            <td>${escapeHtml(item.unit || "")}</td>
+            <td>${formatMoney(price)}</td>
+            <td>${formatMoney(line)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const termsHtml = data.terms.map((term, idx) => `<li>${idx + 1}. ${escapeHtml(term)}</li>`).join("");
+      const termsSection = data.fields["show-terms"] ? `
+        <section class="preview-terms">
+          <strong>條款：</strong>
+          <ol style="margin:6px 0 0 18px; padding:0;">${termsHtml || "<li>無</li>"}</ol>
+        </section>
+      ` : "";
+
+      const signSection = data.fields["show-signature"] ? `
+        <section class="preview-sign">
+          <div class="signature-box">甲方簽章</div>
+          <div class="signature-box">乙方簽章</div>
+        </section>
+      ` : "";
+
+      document.getElementById("preview").innerHTML = `
+        <header class="preview-head">
+          <div>
+            <h3 class="preview-title">雲派對數位商務工作室 報價單</h3>
+            <div class="muted">Quotation</div>
+          </div>
+          <div class="preview-meta">
+            <div>報價單號：${escapeHtml(data.fields["quote-number"] || "")}</div>
+            <div>日期：${escapeHtml(data.fields["quote-date"] || "")}</div>
+            <div>有效期限：${escapeHtml(data.fields["quote-valid-date"] || "")}</div>
+          </div>
+        </header>
+
+        <section class="preview-columns">
+          <div class="preview-card">
+            <h3>報價公司</h3>
+            <div>${escapeHtml(data.fields["company-name"] || "")}</div>
+            <div>統編：${escapeHtml(data.fields["company-tax-id"] || "")}</div>
+            <div>電話：${escapeHtml(data.fields["company-phone"] || "")}</div>
+            <div>Email：${escapeHtml(data.fields["company-email"] || "")}</div>
+            <div>x地址：${escapeHtml(data.fields["company-address"] || "")}</div>
+          </div>
+          <div class="preview-card">
+            <h3>客戶資訊</h3>
+            <div>${escapeHtml(data.fields["client-name"] || "")}</div>
+            <div>統編：${escapeHtml(data.fields["client-tax-id"] || "")}</div>
+            <div>電話：${escapeHtml(data.fields["client-phone"] || "")}</div>
+            <div>Email：${escapeHtml(data.fields["client-email"] || "")}</div>
+            <div>地址：${escapeHtml(data.fields["client-address"] || "")}</div>
+          </div>
+        </section>
+
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>品項名稱</th>
+              <th>數量</th>
+              <th>單位</th>
+              <th>單價</th>
+              <th>小計</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml || "<tr><td colspan='6' class='muted'>尚未新增項目</td></tr>"}
+          </tbody>
+        </table>
+
+        <section class="preview-terms">
+          <div style="text-align:right;">
+            <div>小計：${formatMoney(subtotalRaw)}</div>
+            <div>稅額 (${taxRate}%): ${formatMoney(taxRaw)}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--ink);">總計：${formatMoney(totalRaw)}</div>
+          </div>
+        </section>
+
+        ${termsSection}
+
+        <section class="preview-bank">
+          <strong>匯款資訊：</strong>
+          <div>銀行：${escapeHtml(data.fields["bank-name"] || "")}</div>
+          <div>帳號：${escapeHtml(data.fields["bank-account"] || "")}</div>
+          <div>戶名：${escapeHtml(data.fields["bank-holder"] || "")}</div>
+        </section>
+
+        ${signSection}
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function autoSave() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectData()));
+    }
+
+    function saveDraft() {
+      autoSave();
+      setStatus("草稿已儲存");
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(collectData(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${document.getElementById("quote-number").value || "quote"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus("已匯出 JSON");
+    }
+
+    function importJson(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          fillData(data);
+          setStatus("已匯入 JSON");
+        } catch (err) {
+          setStatus("匯入失敗：JSON 格式錯誤", 2600);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function onAnyInput() {
+      calculateTotals();
+    }
+
+    function initDefaults() {
+      document.getElementById("quote-date").value = nowDate();
+      document.getElementById("quote-valid-date").value = plusDays(30);
+
+      const today = nowDate().replaceAll("-", "");
+      document.getElementById("quote-number").value = `QUO-${today}-001`;
+
+      createItemRow({ name: "", quantity: 1, unit: "式", price: 0 });
+      createTerm(defaultTerms[0]);
+      renderPreview();
+    }
+
+    function bindEvents() {
+      document.getElementById("btn-add-item").addEventListener("click", () => createItemRow({ quantity: 1, unit: "式", price: 0 }));
+
+      document.getElementById("btn-add-term").addEventListener("click", () => {
+        createTerm("");
+        autoSave();
+      });
+
+      document.getElementById("btn-load-terms").addEventListener("click", () => {
+        const termsList = document.getElementById("terms-list");
+        termsList.innerHTML = "";
+        defaultTerms.forEach(createTerm);
+        renderPreview();
+        autoSave();
+      });
+
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        const eventName = el.type === "checkbox" ? "change" : "input";
+        el.addEventListener(eventName, onAnyInput);
+      });
+
+      document.getElementById("btn-save").addEventListener("click", saveDraft);
+      document.getElementById("btn-export").addEventListener("click", exportJson);
+      document.getElementById("btn-import").addEventListener("click", () => document.getElementById("import-file").click());
+
+      document.getElementById("import-file").addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) importJson(file);
+        e.target.value = "";
+      });
+
+      document.getElementById("btn-print").addEventListener("click", () => {
+        renderPreview();
+        window.print();
+      });
+    }
+
+    function bootstrap() {
+      bindEvents();
+
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          fillData(JSON.parse(saved));
+          setStatus("已載入草稿", 1300);
+        } catch (err) {
+          initDefaults();
+        }
+      } else {
+        initDefaults();
+      }
+
+      calculateTotals();
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>
