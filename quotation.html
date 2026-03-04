@@ -736,7 +736,7 @@
         `;
       }).join("");
 
-      const termsHtml = data.terms.map((term, idx) => `<li>${idx + 1}. ${escapeHtml(term)}</li>`).join("");
+      const termsHtml = data.terms.map((term) => `<li>${escapeHtml(term)}</li>`).join("");
       const termsSection = data.fields["show-terms"] ? `
         <section class="preview-terms">
           <strong>條款：</strong>
