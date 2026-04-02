@@ -344,6 +344,25 @@
       min-height: 28px;
     }
 
+    .signature-box.stamp-area {
+      display: grid;
+      gap: 8px;
+    }
+
+    .stamp-frame {
+      width: 140px;
+      height: 140px;
+      border: 2px dashed rgba(26, 60, 120, 0.35);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(26, 60, 120, 0.5);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
     .muted {
       color: var(--muted);
     }
@@ -747,7 +766,10 @@
       const signSection = data.fields["show-signature"] ? `
         <section class="preview-sign">
           <div class="signature-box">甲方簽章</div>
-          <div class="signature-box">乙方簽章</div>
+          <div class="signature-box stamp-area">
+            <div>乙方簽章</div>
+            <div class="stamp-frame">請蓋章</div>
+          </div>
         </section>
       ` : "";
 

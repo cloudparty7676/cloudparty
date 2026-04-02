@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DORI Pro - 專業佈點規劃工具</title>
+    <style>
+        :root {
+            --bg: #f6fbff;
+            --card: #ffffff;
+            --text: #0b1220;
+            --muted: #4b5a77;
+            --line: rgba(26, 60, 120, 0.12);
+            --primary: #3aa0ff;
+            --primary2: #7ad3ff;
+            --accent: #4ff0c8;
+            --shadow: 0 18px 60px rgba(10, 40, 90, 0.12);
+            --shadow2: 0 10px 28px rgba(10, 40, 90, 0.10);
+
+            --det: #2dcfb0;
+            --obs: #52b8ff;
+            --rec: #3a9eff;
+            --ide: #2378e6;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+            background:
+                radial-gradient(rgba(58, 160, 255, 0.22), transparent 55%),
+                radial-gradient(rgba(122, 211, 255, 0.22), transparent 60%),
+                radial-gradient(rgba(79, 240, 200, 0.14), transparent 60%),
+                var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow2);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin: 0 0 20px 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin: 20px 0 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-group { margin-bottom: 15px; }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.2s, box-shadow 0.2s;
+            background: #fff;
+            color: var(--text);
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(58, 160, 255, 0.12);
+            outline: none;
+        }
+
+        .fov-range-box {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--primary);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
+        .range-text {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .range-highlight {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .result-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+        }
+
+        .result-label { font-size: 0.85rem; font-weight: 600; }
+        .result-value { font-family: monospace; font-size: 1rem; font-weight: bold; }
+
+        canvas {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76));
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow2);
+            width: 100%;
+            height: auto;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            box-shadow: 0 14px 28px rgba(58, 160, 255, 0.22);
+        }
+
+        @media (max-width: 980px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 14px; }
+            .info-bar { flex-direction: column; gap: 6px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="panel">
+        <h1>🔍 DORI 規劃專家 IEC 62676-4:2014</h1>
+
+        <div class="section-title">基礎硬體設定</div>
+        <div class="input-group">
+            <label>水平解析度 (Horizontal Pixels)</label>
+            <input type="number" id="res" value="2592">
+        </div>
+        <div class="input-group">
+            <label>感光元件寬度 (Sensor Width mm)</label>
+            <select id="sensor">
+                <option value="7.18">1/1.8" (7.18mm)</option>
+                <option value="4.59" selected>1/2.8" (4.59mm)</option>
+                <option value="4.48">1/3" (4.48mm)</option>
+            </select>
+        </div>
+
+        <div class="section-title">光學參數 (可手動校正)</div>
+        <div class="input-group">
+            <label>標稱焦距: <span id="f-val">4.7</span>mm</label>
+            <input type="range" id="focal" min="2.8" max="150" step="0.1" value="4.7">
+        </div>
+
+        <div class="input-group">
+            <label>手動修正 HFOV (度) - <i>優先於焦距</i></label>
+            <input type="number" id="manualHFOV" placeholder="例如: 57" step="0.1">
+            <div class="fov-range-box">
+                <div class="range-text">
+                    理論計算 HFOV: <span id="calc-hfov" class="range-highlight">--</span><br>
+                    工程合理範圍 (±10%): <span id="hfov-range" style="color:var(--primary2)">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>安裝高度 (m)</label>
+            <input type="number" id="camH" value="3" step="0.1">
+        </div>
+
+        <div class="section-title">EN 62676-4 覆蓋範圍</div>
+        <div id="results">
+            <div class="result-card" style="background: rgba(35, 120, 230, 0.12); color: var(--ide);">
+                <span class="result-label">確認 (250 PPM)</span> <span class="result-value" id="r-ide">0 m</span>
+            </div>
+            <div class="result-card" style="background: rgba(58, 160, 255, 0.12); color: var(--rec);">
+                <span class="result-label">識別 (125 PPM)</span> <span class="result-value" id="r-rec">0 m</span>
+            </div>
+            <div class="result-card" style="background: rgba(82, 184, 255, 0.12); color: var(--obs);">
+                <span class="result-label">觀察 (62 PPM)</span> <span class="result-value" id="r-obs">0 m</span>
+            </div>
+            <div class="result-card" style="background: rgba(79, 240, 200, 0.14); color: var(--det);">
+                <span class="result-label">偵測 (25 PPM)</span> <span class="result-value" id="r-det">0 m</span>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <canvas id="mapCanvas" width="800" height="600"></canvas>
+        <div class="info-bar">
+            <span>使用視角: <b id="final-hfov">0°</b></span>
+            <span>場景寬度 (@10m): <b id="scene-w">0m</b></span>
+            <span>狀態: <b id="status-msg">計算中</b></span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 10px;">
+            提示：若手動輸入 HFOV，系統將自動調整 PPM 分佈以符合實際規格。
+        </p>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+const inputs = ['res', 'sensor', 'focal', 'camH', 'manualHFOV'];
+inputs.forEach(id => document.getElementById(id).addEventListener('input', update));
+
+function update() {
+    const px = parseFloat(document.getElementById('res').value) || 1920;
+    const sw = parseFloat(document.getElementById('sensor').value);
+    const f = parseFloat(document.getElementById('focal').value);
+    const h = parseFloat(document.getElementById('camH').value);
+    const manualH = document.getElementById('manualHFOV').value;
+
+    document.getElementById('f-val').innerText = f;
+
+    const theoryHFOV = 2 * Math.atan(sw / (2 * f)) * (180 / Math.PI);
+    document.getElementById('calc-hfov').innerText = theoryHFOV.toFixed(1) + '°';
+
+    const minH = theoryHFOV * 0.95;
+    const maxH = theoryHFOV * 1.15;
+    document.getElementById('hfov-range').innerText = `${minH.toFixed(1)}° ~ ${maxH.toFixed(1)}°`;
+
+    let finalHFOV = theoryHFOV;
+    if (manualH && manualH > 0) {
+        finalHFOV = parseFloat(manualH);
+        document.getElementById('status-msg').innerText = '使用規格書校正值';
+        document.getElementById('status-msg').style.color = '#eaf6ff';
+    } else {
+        document.getElementById('status-msg').innerText = '理論數值模式';
+        document.getElementById('status-msg').style.color = '#ffffff';
+    }
+    document.getElementById('final-hfov').innerText = finalHFOV.toFixed(1) + '°';
+
+    const standards = { ide: 250, rec: 125, obs: 62, det: 25 };
+    const dists = {};
+
+    for (let key in standards) {
+        const sceneW = px / standards[key];
+        const ground = (sceneW / 2) / Math.tan((finalHFOV / 2) * Math.PI / 180);
+        dists[key] = ground;
+        document.getElementById(`r-${key}`).innerText = ground.toFixed(1) + ' m';
+    }
+
+    const w10 = 2 * 10 * Math.tan((finalHFOV / 2) * Math.PI / 180);
+    document.getElementById('scene-w').innerText = w10.toFixed(1) + ' m';
+
+    draw(finalHFOV, dists);
+}
+
+function draw(hfov, dists) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = 60, cy = canvas.height / 2;
+    const scale = 5;
+    const rad = (hfov * Math.PI) / 180;
+
+    const zones = [
+        { d: dists.det, c: 'rgba(79, 240, 200, 0.24)', s: '#2dcfb0' },
+        { d: dists.obs, c: 'rgba(82, 184, 255, 0.24)', s: '#52b8ff' },
+        { d: dists.rec, c: 'rgba(58, 160, 255, 0.22)', s: '#3a9eff' },
+        { d: dists.ide, c: 'rgba(35, 120, 230, 0.20)', s: '#2378e6' }
+    ];
+
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(26, 60, 120, 0.18)';
+    for (let i = 1; i <= 10; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, i * 50, -Math.PI / 3, Math.PI / 3);
+        ctx.stroke();
+        ctx.fillStyle = '#4b5a77';
+        ctx.fillText(i * 10 + 'm', cx + i * 50 - 10, cy + 20);
+    }
+    ctx.setLineDash([]);
+
+    zones.forEach(z => {
+        if (z.d <= 0) return;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, z.d * scale, -rad / 2, rad / 2);
+        ctx.closePath();
+        ctx.fillStyle = z.c;
+        ctx.fill();
+        ctx.strokeStyle = z.s;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    });
+
+    ctx.fillStyle = '#1d4f96';
+    ctx.beginPath();
+    ctx.moveTo(cx - 15, cy - 10);
+    ctx.lineTo(cx + 5, cy - 10);
+    ctx.lineTo(cx + 15, cy);
+    ctx.lineTo(cx + 5, cy + 10);
+    ctx.lineTo(cx - 15, cy + 10);
+    ctx.closePath();
+    ctx.fill();
+}
+
+update();
+</script>
+</body>
+</html>

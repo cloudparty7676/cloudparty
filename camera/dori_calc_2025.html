@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEC 62676-4:2025 Visual Performance Calculator</title>
+    <style>
+        :root {
+            --bg: #f6fbff;
+            --panel: #ffffff;
+            --ink: #0b1220;
+            --muted: #4b5a77;
+            --line: rgba(26, 60, 120, 0.12);
+            --accent: #3aa0ff;
+            --accent-soft: rgba(58, 160, 255, 0.12);
+            --ovw: #4ff0c8;
+            --otl: #2dcfb0;
+            --dsc: #52b8ff;
+            --prc: #7ad3ff;
+            --chr: #3aa0ff;
+            --val: #2d88f0;
+            --scr: #2378e6;
+            --shadow: 0 18px 60px rgba(10, 40, 90, 0.12);
+            --shadow2: 0 10px 28px rgba(10, 40, 90, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(rgba(58, 160, 255, 0.22), transparent 55%),
+                radial-gradient(rgba(122, 211, 255, 0.22), transparent 60%),
+                radial-gradient(rgba(79, 240, 200, 0.14), transparent 60%),
+                var(--bg);
+        }
+
+        .container {
+            max-width: 1380px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+
+        .panel,
+        .stage,
+        .note-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: var(--shadow2);
+        }
+
+        .panel { padding: 24px; }
+        .stage { padding: 16px; }
+        .note-card { margin-top: 16px; padding: 16px; }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 1.45rem;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            margin: 0 0 18px 0;
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .section-title {
+            margin: 20px 0 10px 0;
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        .input-group { margin-bottom: 14px; }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.86rem;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(58, 160, 255, 0.12);
+        }
+
+        .range-box {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.76);
+            border-left: 4px solid var(--accent);
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: var(--muted);
+        }
+
+        .range-box b { color: var(--accent); }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .result-card {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 11px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+        }
+
+        .result-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .result-sub {
+            font-size: 0.76rem;
+            color: var(--muted);
+        }
+
+        .result-value {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .result-ovw { background: rgba(79, 240, 200, 0.16); color: #1f9f85; }
+        .result-otl { background: rgba(45, 207, 176, 0.16); color: #178f78; }
+        .result-dsc { background: rgba(82, 184, 255, 0.16); color: #2f8dd6; }
+        .result-prc { background: rgba(122, 211, 255, 0.18); color: #2f93da; }
+        .result-chr { background: rgba(58, 160, 255, 0.16); color: #2d84da; }
+        .result-val { background: rgba(45, 136, 240, 0.16); color: #236ebf; }
+        .result-scr { background: rgba(35, 120, 230, 0.14); color: #1f63bf; }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 14px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.78) 100%);
+        }
+
+        .info-bar {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .info-pill {
+            padding: 12px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3aa0ff, #7ad3ff);
+            color: #ffffff;
+            font-size: 0.86rem;
+            text-align: center;
+        }
+
+        .info-pill b {
+            display: block;
+            margin-top: 4px;
+            font-size: 1rem;
+        }
+
+        .note-card h2 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .note-card p,
+        .note-card li {
+            margin: 0;
+            font-size: 0.84rem;
+            line-height: 1.6;
+            color: var(--muted);
+        }
+
+        .note-list {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 6px;
+        }
+
+        @media (max-width: 1100px) {
+            .container { grid-template-columns: 1fr; }
+            .info-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 14px; }
+            .panel, .stage, .note-card { border-radius: 16px; }
+            .info-bar { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="panel">
+        <h1>IEC 62676-4:2025 Visual Performance</h1>
+        <p class="subtitle">
+            新版標準已由 2014 的 DORI 模型，改為 2025 的 7 級 Visual Performance / O2DCPVS 像素密度模型。
+        </p>
+
+        <div class="section-title">基礎硬體設定</div>
+        <div class="input-group">
+            <label>水平解析度 (Horizontal Pixels)</label>
+            <input type="number" id="res" value="2592" min="1">
+        </div>
+        <div class="input-group">
+            <label>感光元件寬度 (Sensor Width mm)</label>
+            <select id="sensor">
+                <option value="7.18">1/1.8" (7.18mm)</option>
+                <option value="5.76">1/2" (5.76mm)</option>
+                <option value="4.59" selected>1/2.8" (4.59mm)</option>
+                <option value="4.48">1/3" (4.48mm)</option>
+            </select>
+        </div>
+
+        <div class="section-title">光學參數</div>
+        <div class="input-group">
+            <label>標稱焦距: <span id="f-val">4.7</span> mm</label>
+            <input type="range" id="focal" min="2.8" max="150" step="0.1" value="4.7">
+        </div>
+        <div class="input-group">
+            <label>手動修正 HFOV (度) - <i>優先於焦距</i></label>
+            <input type="number" id="manualHFOV" placeholder="例如: 57" step="0.1" min="1">
+            <div class="range-box">
+                理論 HFOV: <b id="calc-hfov">--</b><br>
+                工程合理範圍: <span id="hfov-range">--</span>
+            </div>
+        </div>
+        <div class="input-group">
+            <label>安裝高度 (m)</label>
+            <input type="number" id="camH" value="3" step="0.1" min="0">
+        </div>
+
+        <div class="section-title">IEC 62676-4:2025 像素密度結果</div>
+        <div class="results-grid">
+            <div class="result-card result-scr">
+                <div>
+                    <div class="result-title">Scrutinize</div>
+                    <div class="result-sub">1500 px/m</div>
+                </div>
+                <div class="result-value" id="r-scr">0 m</div>
+            </div>
+            <div class="result-card result-val">
+                <div>
+                    <div class="result-title">Validate</div>
+                    <div class="result-sub">500 px/m</div>
+                </div>
+                <div class="result-value" id="r-val">0 m</div>
+            </div>
+            <div class="result-card result-chr">
+                <div>
+                    <div class="result-title">Characterize</div>
+                    <div class="result-sub">250 px/m</div>
+                </div>
+                <div class="result-value" id="r-chr">0 m</div>
+            </div>
+            <div class="result-card result-prc">
+                <div>
+                    <div class="result-title">Perceive</div>
+                    <div class="result-sub">125 px/m</div>
+                </div>
+                <div class="result-value" id="r-prc">0 m</div>
+            </div>
+            <div class="result-card result-dsc">
+                <div>
+                    <div class="result-title">Discern</div>
+                    <div class="result-sub">80 px/m</div>
+                </div>
+                <div class="result-value" id="r-dsc">0 m</div>
+            </div>
+            <div class="result-card result-otl">
+                <div>
+                    <div class="result-title">Outline</div>
+                    <div class="result-sub">40 px/m</div>
+                </div>
+                <div class="result-value" id="r-otl">0 m</div>
+            </div>
+            <div class="result-card result-ovw">
+                <div>
+                    <div class="result-title">Overview</div>
+                    <div class="result-sub">20 px/m</div>
+                </div>
+                <div class="result-value" id="r-ovw">0 m</div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="stage">
+            <canvas id="mapCanvas" width="940" height="640"></canvas>
+            <div class="info-bar">
+                <div class="info-pill">使用視角<b id="final-hfov">0°</b></div>
+                <div class="info-pill">場景寬度 @10m<b id="scene-w">0 m</b></div>
+                <div class="info-pill">垂直高差<b id="v-gap">0 m</b></div>
+                <div class="info-pill">模式<b id="status-msg">理論數值</b></div>
+            </div>
+        </div>
+
+        <div class="note-card">
+            <h2>公開可查核的 2025 版重點</h2>
+            <ul class="note-list">
+                <li>IEC 62676-4:2025 已於 2025-10-09 發布，取代 2014 版。</li>
+                <li>像素密度等級已由舊版 DORI 的 4 級，改為 7 級 Visual Performance。</li>
+                <li>本頁採用公開摘要可見的 7 個門檻值：20 / 40 / 80 / 125 / 250 / 500 / 1500 px/m。</li>
+                <li>Scrutinize: 可高度確定個體身分，辨識車型與年份，並可靠讀取車牌。</li>
+                <li>Validate: 可驗證已知對象、追查行為，並可讀取車牌。</li>
+                <li>Characterize: 可依人物類型、步態、行為特徵進行描述，也可判斷車種或車輛類別。</li>
+                <li>Perceive: 可看清物體與動作，但仍不足以穩定辨別性別或明顯個體特徵。</li>
+                <li>Discern: 可分辨物體及其動作，並區分人、車、動物等主要類型。</li>
+                <li>Outline: 可看出物體輪廓，並判斷移動方向，但細節仍有限。</li>
+                <li>Overview: 可判斷場景中是否有物體存在或移動，屬於最低層級的整體監看。</li>
+                <li>這些門檻主要用於人眼判讀場景規劃；若是 AI analytics 或 thermal，應另用對應方法。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("mapCanvas");
+const ctx = canvas.getContext("2d");
+const controls = ["res", "sensor", "focal", "camH", "manualHFOV"];
+const levels = [
+    { key: "ovw", label: "Overview", ppm: 20, fill: "rgba(79, 240, 200, 0.24)", stroke: "#2dcfb0" },
+    { key: "otl", label: "Outline", ppm: 40, fill: "rgba(45, 207, 176, 0.24)", stroke: "#22b699" },
+    { key: "dsc", label: "Discern", ppm: 80, fill: "rgba(82, 184, 255, 0.22)", stroke: "#52b8ff" },
+    { key: "prc", label: "Perceive", ppm: 125, fill: "rgba(122, 211, 255, 0.22)", stroke: "#7ad3ff" },
+    { key: "chr", label: "Characterize", ppm: 250, fill: "rgba(58, 160, 255, 0.20)", stroke: "#3aa0ff" },
+    { key: "val", label: "Validate", ppm: 500, fill: "rgba(45, 136, 240, 0.18)", stroke: "#2d88f0" },
+    { key: "scr", label: "Scrutinize", ppm: 1500, fill: "rgba(35, 120, 230, 0.16)", stroke: "#2378e6" }
+];
+
+controls.forEach((id) => document.getElementById(id).addEventListener("input", update));
+
+function update() {
+    const px = parseFloat(document.getElementById("res").value) || 1920;
+    const sensorWidth = parseFloat(document.getElementById("sensor").value) || 4.59;
+    const focal = parseFloat(document.getElementById("focal").value) || 4.7;
+    const camH = parseFloat(document.getElementById("camH").value) || 3;
+    const manualHFOV = parseFloat(document.getElementById("manualHFOV").value);
+
+    document.getElementById("f-val").innerText = focal.toFixed(1);
+
+    const theoryHFOV = 2 * Math.atan(sensorWidth / (2 * focal)) * (180 / Math.PI);
+    const minHFOV = theoryHFOV * 0.95;
+    const maxHFOV = theoryHFOV * 1.15;
+    const finalHFOV = !Number.isNaN(manualHFOV) && manualHFOV > 0 ? manualHFOV : theoryHFOV;
+    const useManual = !Number.isNaN(manualHFOV) && manualHFOV > 0;
+    const vGap = Math.abs(camH - 1.7);
+
+    document.getElementById("calc-hfov").innerText = theoryHFOV.toFixed(1) + "°";
+    document.getElementById("hfov-range").innerText = minHFOV.toFixed(1) + "° ~ " + maxHFOV.toFixed(1) + "°";
+    document.getElementById("final-hfov").innerText = finalHFOV.toFixed(1) + "°";
+    document.getElementById("scene-w").innerText = (2 * 10 * Math.tan((finalHFOV / 2) * Math.PI / 180)).toFixed(1) + " m";
+    document.getElementById("v-gap").innerText = vGap.toFixed(1) + " m";
+    document.getElementById("status-msg").innerText = useManual ? "規格書校正" : "理論數值";
+
+    const distances = {};
+    levels.forEach((level) => {
+        const sceneWidth = px / level.ppm;
+        const groundDistance = (sceneWidth / 2) / Math.tan((finalHFOV / 2) * Math.PI / 180);
+        distances[level.key] = {
+            ground: groundDistance,
+            slant: Math.sqrt(Math.pow(groundDistance, 2) + Math.pow(vGap, 2))
+        };
+        document.getElementById("r-" + level.key).innerText = groundDistance.toFixed(1) + " m";
+    });
+
+    draw(finalHFOV, distances);
+}
+
+function draw(hfov, distances) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const originX = 76;
+    const originY = canvas.height / 2;
+    const angle = (hfov * Math.PI) / 180;
+    const maxDistance = Math.max(...levels.map((level) => distances[level.key].ground), 1);
+    const meterScale = Math.min((canvas.width - 180) / maxDistance, 13);
+
+    drawGrid(originX, originY, angle, meterScale, maxDistance);
+
+    levels.forEach((level) => {
+        const radius = distances[level.key].ground * meterScale;
+        if (!Number.isFinite(radius) || radius <= 0) return;
+
+        ctx.beginPath();
+        ctx.moveTo(originX, originY);
+        ctx.arc(originX, originY, radius, -angle / 2, angle / 2);
+        ctx.closePath();
+        ctx.fillStyle = level.fill;
+        ctx.fill();
+        ctx.strokeStyle = level.stroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    });
+
+    drawCamera(originX, originY);
+    drawLegend();
+}
+
+function drawGrid(originX, originY, angle, meterScale, maxDistance) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(26, 60, 120, 0.18)";
+    ctx.fillStyle = "#4b5a77";
+    ctx.lineWidth = 1;
+    ctx.font = "12px system-ui";
+
+    const step = chooseStep(maxDistance);
+    for (let meter = step; meter <= maxDistance; meter += step) {
+        const radius = meter * meterScale;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.arc(originX, originY, radius, -angle / 2, angle / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillText(meter + " m", originX + radius - 16, originY + 18);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(originX + Math.cos(-angle / 2) * maxDistance * meterScale, originY + Math.sin(-angle / 2) * maxDistance * meterScale);
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(originX + Math.cos(angle / 2) * maxDistance * meterScale, originY + Math.sin(angle / 2) * maxDistance * meterScale);
+    ctx.strokeStyle = "rgba(26, 60, 120, 0.22)";
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawCamera(originX, originY) {
+    ctx.save();
+    ctx.fillStyle = "#1d4f96";
+    ctx.beginPath();
+    ctx.moveTo(originX - 18, originY - 11);
+    ctx.lineTo(originX + 5, originY - 11);
+    ctx.lineTo(originX + 18, originY);
+    ctx.lineTo(originX + 5, originY + 11);
+    ctx.lineTo(originX - 18, originY + 11);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawLegend() {
+    const startX = canvas.width - 210;
+    let startY = 28;
+    ctx.save();
+    ctx.font = "12px system-ui";
+
+    levels.slice().reverse().forEach((level) => {
+        ctx.fillStyle = level.fill;
+        ctx.strokeStyle = level.stroke;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(startX, startY, 14, 14);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#4b5a77";
+        ctx.fillText(level.label + " (" + level.ppm + " px/m)", startX + 22, startY + 11);
+        startY += 22;
+    });
+    ctx.restore();
+}
+
+function chooseStep(maxDistance) {
+    if (maxDistance <= 20) return 2;
+    if (maxDistance <= 60) return 5;
+    if (maxDistance <= 120) return 10;
+    return 20;
+}
+
+update();
+</script>
+</body>
+</html>
