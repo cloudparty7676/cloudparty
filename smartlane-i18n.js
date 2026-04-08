@@ -331,6 +331,9 @@ const applyLanguage = (lang) => {
     btn.classList.toggle("is-active", btn.dataset.lang === lang);
   });
 
+  const yearEl = document.getElementById("y");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
   localStorage.setItem("lang", lang);
   document.dispatchEvent(new CustomEvent("language:change", { detail: { lang } }));
 };
