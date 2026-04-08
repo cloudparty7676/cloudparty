@@ -226,6 +226,23 @@
     }
     .ctaBox h3{margin:0 0 6px; font-size:22px}
     .ctaBox p{margin:0; color:var(--muted); line-height:1.6}
+    .contactEmail{
+      margin-top:12px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid rgba(58,160,255,.18);
+      background:rgba(255,255,255,.76);
+      color:var(--text);
+      font-weight:700;
+      word-break:break-all;
+    }
+    .contactEmailLabel{
+      color:var(--muted);
+      font-weight:600;
+    }
     footer{
       padding:22px 0 34px;
       border-top:1px solid var(--line);
@@ -465,9 +482,13 @@
             <h3 data-i18n="cta.title">想用影像與即時資料加速決策？</h3>
             <p data-i18n="cta.desc">留下需求，我們可以提供 Demo、PoC 規劃與導入建議。</p>
             <p class="small" style="margin-top:8px;" data-i18n="cta.note">Line/Email</p>
+            <div class="contactEmail" aria-label="Email">
+              <span class="contactEmailLabel" data-i18n="cta.emailLabel">Email</span>
+              <span>service@cloudparty.tw</span>
+            </div>
           </div>
           <div class="heroActions" style="position:relative; z-index:1;">
-            <a class="btn primary" href="mailto:hello@cloudparty.example" onclick="return false;" data-i18n="cta.contact">聯絡我們</a>
+            <a class="btn primary" href="mailto:service@cloudparty.tw" data-i18n="cta.contact">聯絡我們</a>
           </div>
         </div>
       </div>

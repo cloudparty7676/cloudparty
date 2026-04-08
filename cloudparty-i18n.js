@@ -90,6 +90,7 @@ const i18n = {
       title: "想用即時資料加速決策？",
       desc: "留下需求，我們可以提供 Demo、PoC 規劃與導入建議。",
       note: "Line/Email",
+      emailLabel: "Email",
       contact: "聯絡我們"
     },
     footer: {
@@ -187,6 +188,7 @@ const i18n = {
       title: "Accelerate decisions with real-time data?",
       desc: "Share your needs and we can provide demos, PoC planning, and rollout advice.",
       note: "Line / Email",
+      emailLabel: "Email",
       contact: "Contact us"
     },
     footer: {
