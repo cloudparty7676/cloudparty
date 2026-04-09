@@ -73,6 +73,33 @@
             justify-content: space-between;
         }
 
+        .copy-btn {
+            border: 1px solid var(--line);
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(58, 160, 255, 0.18);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(58, 160, 255, 0.24);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn:disabled {
+            cursor: default;
+            opacity: 0.75;
+        }
+
         .input-group { margin-bottom: 15px; }
 
         label {
@@ -207,19 +234,22 @@
             <input type="number" id="camH" value="3" step="0.1">
         </div>
 
-        <div class="section-title">EN 62676-4 覆蓋範圍</div>
+        <div class="section-title">
+            <span>EN 62676-4 覆蓋範圍</span>
+            <button type="button" class="copy-btn" id="copyResultsBtn">複製結果</button>
+        </div>
         <div id="results">
             <div class="result-card" style="background: rgba(35, 120, 230, 0.12); color: var(--ide);">
-                <span class="result-label">確認 (250 PPM)</span> <span class="result-value" id="r-ide">0 m</span>
+                <span class="result-label">I 確認 (250 PPM)</span> <span class="result-value" id="r-ide">0 m</span>
             </div>
             <div class="result-card" style="background: rgba(58, 160, 255, 0.12); color: var(--rec);">
-                <span class="result-label">識別 (125 PPM)</span> <span class="result-value" id="r-rec">0 m</span>
+                <span class="result-label">R 識別 (125 PPM)</span> <span class="result-value" id="r-rec">0 m</span>
             </div>
             <div class="result-card" style="background: rgba(82, 184, 255, 0.12); color: var(--obs);">
-                <span class="result-label">觀察 (62 PPM)</span> <span class="result-value" id="r-obs">0 m</span>
+                <span class="result-label">O 觀察 (62 PPM)</span> <span class="result-value" id="r-obs">0 m</span>
             </div>
             <div class="result-card" style="background: rgba(79, 240, 200, 0.14); color: var(--det);">
-                <span class="result-label">偵測 (25 PPM)</span> <span class="result-value" id="r-det">0 m</span>
+                <span class="result-label">D 偵測 (25 PPM)</span> <span class="result-value" id="r-det">0 m</span>
             </div>
         </div>
     </div>
@@ -241,7 +271,9 @@
 const canvas = document.getElementById('mapCanvas');
 const ctx = canvas.getContext('2d');
 const inputs = ['res', 'sensor', 'focal', 'camH', 'manualHFOV'];
+const copyResultsBtn = document.getElementById('copyResultsBtn');
 inputs.forEach(id => document.getElementById(id).addEventListener('input', update));
+copyResultsBtn.addEventListener('click', copyResults);
 
 function update() {
     const px = parseFloat(document.getElementById('res').value) || 1920;
@@ -332,6 +364,50 @@ function draw(hfov, dists) {
     ctx.lineTo(cx - 15, cy + 10);
     ctx.closePath();
     ctx.fill();
+}
+
+function buildResultsText() {
+    return [
+        'EN 62676-4 2014 DORI ',
+        `Identify (250 PPM) : ` + document.getElementById('r-ide').innerText,
+        `Recognize (125 PPM) : ` + document.getElementById('r-rec').innerText,
+        `Observe (62 PPM) : ` + document.getElementById('r-obs').innerText,
+        `Detect (25 PPM) : ` + document.getElementById('r-det').innerText
+    ].join('\n');
+}
+
+async function copyResults() {
+    const text = buildResultsText();
+    const originalText = copyResultsBtn.innerText;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            temp.setAttribute('readonly', '');
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+        }
+
+        copyResultsBtn.disabled = true;
+        copyResultsBtn.innerText = '已複製';
+        setTimeout(() => {
+            copyResultsBtn.disabled = false;
+            copyResultsBtn.innerText = originalText;
+        }, 1500);
+    } catch (error) {
+        copyResultsBtn.innerText = '複製失敗';
+        setTimeout(() => {
+            copyResultsBtn.innerText = originalText;
+        }, 1500);
+        console.error('Copy failed:', error);
+    }
 }
 
 update();
