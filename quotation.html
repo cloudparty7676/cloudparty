@@ -538,6 +538,17 @@
         </section>
 
         <section class="section">
+          <h2>乙方簽章上傳</h2>
+          <p style="font-size:12px;color:var(--muted);margin:0 0 10px;">上傳圖片作為乙方數位簽章（建議使用透明背景 PNG）</p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn-small btn-add" id="btn-upload-stamp">選擇圖片</button>
+            <button type="button" class="btn-small btn-danger hide" id="btn-remove-stamp">移除簽章</button>
+            <input type="file" id="stamp-file" accept="image/*" class="hide" />
+          </div>
+          <div id="stamp-preview" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="section">
           <h2>顯示設定</h2>
           <div class="checks">
             <label><input type="checkbox" id="show-terms" checked /> 顯示條款</label>
@@ -561,7 +572,8 @@
     ];
 
     const state = {
-      itemCount: 0
+      itemCount: 0,
+      stampDataUrl: null
     };
 
     const ids = [
@@ -700,6 +712,8 @@
         if (text) data.terms.push(text);
       });
 
+      if (state.stampDataUrl) data.stampDataUrl = state.stampDataUrl;
+
       return data;
     }
 
@@ -727,6 +741,13 @@
       const termsList = document.getElementById("terms-list");
       termsList.innerHTML = "";
       (Array.isArray(data.terms) ? data.terms : []).forEach(createTerm);
+
+      if (data.stampDataUrl) {
+        state.stampDataUrl = data.stampDataUrl;
+        document.getElementById("stamp-preview").innerHTML =
+          `<img src="${state.stampDataUrl}" style="max-width:140px;max-height:140px;object-fit:contain;border:1px solid var(--line);border-radius:8px;padding:4px;" />`;
+        document.getElementById("btn-remove-stamp").classList.remove("hide");
+      }
 
       calculateTotals();
     }
@@ -763,12 +784,16 @@
         </section>
       ` : "";
 
+      const stampContent = state.stampDataUrl
+        ? `<img src="${state.stampDataUrl}" style="max-width:140px;max-height:140px;object-fit:contain;" />`
+        : `<div class="stamp-frame">請蓋章</div>`;
+
       const signSection = data.fields["show-signature"] ? `
         <section class="preview-sign">
           <div class="signature-box">甲方簽章</div>
           <div class="signature-box stamp-area">
             <div>乙方簽章</div>
-            <div class="stamp-frame">請蓋章</div>
+            ${stampContent}
           </div>
         </section>
       ` : "";
@@ -936,6 +961,34 @@
       document.getElementById("btn-print").addEventListener("click", () => {
         renderPreview();
         window.print();
+      });
+
+      document.getElementById("btn-upload-stamp").addEventListener("click", () => {
+        document.getElementById("stamp-file").click();
+      });
+
+      document.getElementById("stamp-file").addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          state.stampDataUrl = ev.target.result;
+          document.getElementById("stamp-preview").innerHTML =
+            `<img src="${state.stampDataUrl}" style="max-width:140px;max-height:140px;object-fit:contain;border:1px solid var(--line);border-radius:8px;padding:4px;" />`;
+          document.getElementById("btn-remove-stamp").classList.remove("hide");
+          renderPreview();
+          autoSave();
+        };
+        reader.readAsDataURL(file);
+        e.target.value = "";
+      });
+
+      document.getElementById("btn-remove-stamp").addEventListener("click", () => {
+        state.stampDataUrl = null;
+        document.getElementById("stamp-preview").innerHTML = "";
+        document.getElementById("btn-remove-stamp").classList.add("hide");
+        renderPreview();
+        autoSave();
       });
     }
 
