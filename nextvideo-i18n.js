@@ -1,7 +1,7 @@
 const i18n = {
   "zh-Hant": {
     meta: {
-      title: "NextVideo｜GIS 監控中樞與雲端影像分析",
+      title: "NextVideo｜GIS 監控中樞與AI影像分析",
       desc: "NextVideo｜GIS 地理與監控服務方案，主要提供雲端影像分析、地圖式監控中樞、事件告警與權限管理。"
     },
     nav: {
@@ -20,7 +20,7 @@ const i18n = {
       demo: "預約 Demo"
     },
     hero: {
-      pill: "GIS 地理 × 監控影像 × 雲端影像分析",
+      pill: "GIS 地理 × 監控影像 × AI影像分析",
       title: "用地圖管理影像<br/>用事件管理風險",
       lead: {
         line1: "NextVideo 是以 GIS 為核心的監控與影像分析方案，",
@@ -150,7 +150,7 @@ const i18n = {
       langAria: "Language switch",
       menuAria: "Open menu",
       menu: "Menu ☰",
-      subtitle: "GIS × Cloud Video Analytics",
+      subtitle: "GIS × AI Video Analytics",
       features: "Features",
       console: "Console",
       architecture: "Architecture",
@@ -159,7 +159,7 @@ const i18n = {
       demo: "Book a Demo"
     },
     hero: {
-      pill: "GIS × Video monitoring × Cloud analytics",
+      pill: "GIS × Video monitoring × AI Video Analyticss",
       title: "Manage video on maps<br/>Manage risk by events",
       lead: {
         line1: "NextVideo is a GIS-first monitoring and video analytics solution, ",
