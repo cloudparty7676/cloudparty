@@ -434,7 +434,7 @@
             return res;
         }
 
-        // Tokenize String
+        // Tokenize String - return tokens so we can reconstruct the parsed expression accurately
         function tokenize(expr) {
             let tokens = [];
             let i = 0;
@@ -497,7 +497,7 @@
                 }
             }
 
-            // Insert Implicit Multiplication
+            // Insert Implicit Multiplication (e.g. 1K => 1 * K)
             let processedTokens = [];
             for (let j = 0; j < tokens.length; j++) {
                 let t = tokens[j];
@@ -517,8 +517,7 @@
         }
 
         // Evaluate Tokens (Shunting-yard -> RPN -> Result)
-        function evaluateExpr(exprStr) {
-            let tokens = tokenize(exprStr);
+        function evaluateTokens(tokens) {
             let output = [];
             let opStack = [];
 
@@ -631,6 +630,34 @@
             }
             if (stack.length !== 1) throw new Error("無效的運算式");
             return stack[0];
+        }
+
+        // Function used by normal evaluator
+        function evaluateExpr(exprStr) {
+            exprStr = exprStr.replace(/(\d),(?=\d)/g, '$1');
+            let tokens = tokenize(exprStr);
+            return evaluateTokens(tokens);
+        }
+
+        // Generate formatted output string reconstructing standard calculation formula
+        function getFormattedExpression(exprStr) {
+            let processedStr = exprStr.replace(/(\d),(?=\d)/g, '$1');
+            let tokens = tokenize(processedStr);
+            let formattedStr = "";
+            for (let i = 0; i < tokens.length; i++) {
+                let t = tokens[i];
+                if (t.type === 'NUM' || t.type === 'CONST') {
+                    formattedStr += `【${t.val}】`;
+                } else if (t.val === 'IMP_MULT') {
+                    formattedStr += " * ";
+                } else if (t.val === 'U-') {
+                    formattedStr += "-";
+                } else {
+                    formattedStr += ` ${t.val} `;
+                }
+            }
+            // cleanup double spaces
+            return formattedStr.replace(/\s+/g, ' ').trim();
         }
 
         // ----------------------------------------------------
@@ -780,18 +807,16 @@
                     } else {
                         // Standard Mode Handler
                         let res = evaluateExpr(expr);
+                        let formattedExpr = escapeHtml(getFormattedExpression(expr));
                         
                         const endTime = performance.now();
                         const timeSpent = ((endTime - startTime) / 1000).toFixed(3);
                         document.getElementById('winTitleText').innerText = `Gu Calculator [花費：${timeSpent} 秒]`;
 
-                        let safeExpr = escapeHtml(expr);
-                        let formattedExpr = safeExpr.replace(/(0[xX][0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+|\d+(\.\d+)?)/g, '【 $1 】');
-
                         let resStr = res.toString();
                         if (typeof res === 'number' && !isNaN(res) && isFinite(res)) {
                             let precisionRes = parseFloat(res.toPrecision(15));
-                            resStr = precisionRes.toString();
+                            resStr = fComma(precisionRes);
                             
                             let isInt = precisionRes % 1 === 0;
                             if (isInt) {
