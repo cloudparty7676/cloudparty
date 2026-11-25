@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁版十六進制編輯器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+          --bg: #f6fbff;
+          --panel: #ffffff;
+          --ink: #0b1220;
+          --muted: #4b5a77;
+          --line: rgba(26, 60, 120, 0.12);
+          --brand: #2f9bff;
+          --brand-2: #84ddff;
+          --brand-dark: #0e2a55;
+          --danger: #ff6b8b;
+          --ok: #4ff0c8;
+          --shadow: 0 18px 60px rgba(10, 40, 90, 0.12);
+          --radius: 12px;
+        }
+
+        /* 自訂色彩工具類別 */
+        .bg-app-bg { background-color: var(--bg); }
+        .bg-app-panel { background-color: var(--panel); }
+        .bg-app-brand { background-color: var(--brand); }
+        .bg-app-brand-dark { background-color: var(--brand-dark); }
+        .bg-app-danger { background-color: var(--danger); }
+
+        .text-app-ink { color: var(--ink); }
+        .text-app-muted { color: var(--muted); }
+        .text-app-brand { color: var(--brand); }
+        .text-app-brand-dark { color: var(--brand-dark); }
+        .text-app-danger { color: var(--danger); }
+        .text-app-ok { color: var(--ok); }
+        .text-app-white { color: #ffffff; }
+
+        .border-app-line { border-color: var(--line); }
+        .border-danger { border-color: var(--danger); }
+
+        /* 按鈕樣式 */
+        .btn-app-brand {
+          background: var(--brand);
+          color: #fff;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: background 0.16s ease, filter 0.16s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+        }
+        .btn-app-brand:hover {
+          background: #1a87e8;
+          filter: brightness(1.04);
+        }
+        .btn-app-brand:disabled {
+          background: rgba(47, 155, 255, 0.4);
+          cursor: not-allowed;
+        }
+
+        .btn-app-ghost {
+          background: rgba(47, 155, 255, 0.14);
+          color: var(--brand-dark);
+          border: 1px solid rgba(47, 155, 255, 0.22);
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.16s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+        }
+        .btn-app-ghost:hover {
+          background: rgba(47, 155, 255, 0.22);
+        }
+
+        .btn-app-danger {
+          background: var(--danger);
+          color: #fff;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: background 0.16s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+        }
+        .btn-app-danger:hover {
+          background: #ff5274;
+        }
+
+        /* 自訂捲軸樣式以符合淺色主題 */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 60, 120, 0.08);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--brand);
+            border-radius: 6px;
+            border: 3px solid var(--bg);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1a87e8;
+        }
+        
+        /* 隱藏 contenteditable 的預設外框 */
+        [contenteditable]:focus {
+            outline: 2px solid var(--brand);
+            outline-offset: -2px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 2px;
+        }
+
+        /* 選取狀態與拖曳防護 */
+        .hex-cell {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .hex-cell:focus {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+    </style>
+</head>
+<body class="bg-app-bg text-app-ink font-mono h-screen flex flex-col overflow-hidden">
+
+    <!-- 頂部導覽列與操作區 -->
+    <header class="bg-app-panel border-b border-app-line p-4 flex flex-wrap justify-between items-center shadow-sm z-10">
+        <div class="flex items-center gap-4 mb-2 sm:mb-0">
+            <h1 class="text-xl font-bold text-app-ink mr-4">Hex 編輯器</h1>
+            
+            <input type="file" id="file-input" class="hidden">
+            <button id="btn-upload" class="btn-app-brand">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                開啟檔案
+            </button>
+            
+            <div id="file-info" class="text-sm text-app-muted">
+                尚未載入檔案
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-2 sm:mt-0">
+            <button id="btn-delete" class="btn-app-danger hidden items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                刪除選取
+            </button>
+            <button id="btn-fill" class="btn-app-brand hidden items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                變更內容
+            </button>
+            
+            <button id="btn-save" class="btn-app-brand disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                儲存並下載
+            </button>
+        </div>
+    </header>
+
+    <!-- 編輯器欄位標題 -->
+    <div class="flex bg-app-panel border-b border-app-line px-4 py-2 text-sm font-bold text-app-muted select-none shadow-sm z-10">
+        <div class="w-24 shrink-0">位址 (Offset)</div>
+        <div class="flex-1 flex gap-2 ml-4">
+            <!-- 產生 00 到 0F 的標題 -->
+            <script>
+                for(let i=0; i<16; i++) {
+                    const extra = i === 7 ? 'mr-4' : '';
+                    document.write(`<div class="w-6 text-center ${extra} text-app-brand-dark">${i.toString(16).padStart(2, '0').toUpperCase()}</div>`);
+                }
+            </script>
+        </div>
+        <div class="w-48 shrink-0 pl-4">ASCII 解析</div>
+    </div>
+
+    <!-- 虛擬捲動編輯區 (Virtual Scroll Container) -->
+    <div id="editor-container" class="flex-1 overflow-y-auto relative bg-app-bg">
+        <!-- 佔位元素，用來撐開捲軸總高度 -->
+        <div id="virtual-spacer" class="absolute top-0 left-0 w-full" style="height: 0px;"></div>
+        
+        <!-- 實際渲染可見內容的容器 -->
+        <div id="editor-content" class="absolute top-0 left-0 w-full px-4">
+            <!-- 內容由 JavaScript 動態產生 -->
+        </div>
+    </div>
+
+    <!-- 變更內容 (Fill) Modal -->
+    <div id="fill-modal" class="fixed inset-0 bg-app-brand-dark bg-opacity-60 hidden items-center justify-center z-50">
+        <div class="bg-app-panel p-6 rounded-lg shadow-xl w-80 border border-app-line">
+            <h2 class="text-xl font-bold text-app-ink mb-4">變更選取內容</h2>
+            <label class="block text-app-muted mb-2 text-sm">請輸入要變更的 16 進位值 (00-FF):</label>
+            <input type="text" id="fill-input" class="w-full bg-app-bg text-app-ink border border-app-line rounded p-2 mb-4 focus:outline-none focus:border-brand text-center uppercase tracking-widest font-mono" value="00" maxlength="2" spellcheck="false">
+            <div class="flex justify-end gap-3">
+                <button id="btn-fill-cancel" class="btn-app-ghost px-4 py-2">取消</button>
+                <button id="btn-fill-confirm" class="btn-app-brand px-4 py-2">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 狀態變數 ---
+        let fileBuffer = new Uint8Array(0); // 存放檔案二進制資料
+        let fileName = "";
+        const ROW_HEIGHT = 28; // 每行高度 (px) - 需與CSS/Tailwind設定相符 (h-7 約為 28px)
+        const BYTES_PER_ROW = 16;
+        
+        // 選取狀態
+        let selStartIdx = -1;
+        let selEndIdx = -1;
+        let isDragging = false;
+        
+        // --- DOM 元素 ---
+        const fileInput = document.getElementById('file-input');
+        const btnUpload = document.getElementById('btn-upload');
+        const btnSave = document.getElementById('btn-save');
+        const btnDelete = document.getElementById('btn-delete');
+        const btnFill = document.getElementById('btn-fill');
+        const fileInfo = document.getElementById('file-info');
+        const editorContainer = document.getElementById('editor-container');
+        const virtualSpacer = document.getElementById('virtual-spacer');
+        const editorContent = document.getElementById('editor-content');
+        
+        const fillModal = document.getElementById('fill-modal');
+        const fillInput = document.getElementById('fill-input');
+        const btnFillConfirm = document.getElementById('btn-fill-confirm');
+        const btnFillCancel = document.getElementById('btn-fill-cancel');
+
+        // --- 事件綁定 ---
+        btnUpload.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        btnSave.addEventListener('click', saveFile);
+        editorContainer.addEventListener('scroll', updateScroll);
+        
+        // 處理內容編輯 (事件委派)
+        editorContent.addEventListener('keydown', handleCellKeydown);
+        editorContent.addEventListener('blur', handleCellBlur, true); // capture phase for blur
+        editorContent.addEventListener('focus', handleCellFocus, true); // capture phase for focus
+        
+        // 拖曳選取事件
+        editorContent.addEventListener('mousedown', handleMouseDown);
+        editorContent.addEventListener('mouseover', handleMouseOver);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        // 刪除與變更事件
+        btnDelete.addEventListener('click', deleteSelection);
+        btnFill.addEventListener('click', openFillModal);
+        btnFillCancel.addEventListener('click', () => { fillModal.classList.remove('flex'); fillModal.classList.add('hidden'); });
+        btnFillConfirm.addEventListener('click', confirmFill);
+
+        window.addEventListener('resize', updateScroll);
+
+        // --- 核心邏輯 ---
+
+        /**
+         * 處理檔案上傳
+         */
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            fileName = file.name;
+            const reader = new FileReader();
+
+            // 顯示載入中
+            fileInfo.innerHTML = `<span class="animate-pulse text-app-brand">正在讀取 ${fileName}...</span>`;
+            editorContent.innerHTML = '';
+            
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                fileBuffer = new Uint8Array(arrayBuffer);
+                
+                // 更新 UI 狀態
+                fileInfo.textContent = `檔案: ${fileName} | 大小: ${formatBytes(fileBuffer.length)}`;
+                btnSave.disabled = false;
+                
+                // 重設選取狀態與捲軸
+                selStartIdx = -1;
+                selEndIdx = -1;
+                updateActionButtons();
+                editorContainer.scrollTop = 0;
+                updateScroll();
+            };
+
+            reader.onerror = function() {
+                fileInfo.textContent = "讀取檔案時發生錯誤。";
+            }
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        /**
+         * 虛擬捲動 (Virtual Scrolling) 核心函式
+         * 根據目前捲軸位置，計算並渲染可見的資料行
+         */
+        function updateScroll() {
+            if (fileBuffer.length === 0) return;
+
+            const scrollTop = editorContainer.scrollTop;
+            const containerHeight = editorContainer.clientHeight;
+
+            // 計算總行數
+            const totalRows = Math.ceil(fileBuffer.length / BYTES_PER_ROW);
+            
+            // 更新虛擬佔位器高度
+            virtualSpacer.style.height = `${totalRows * ROW_HEIGHT}px`;
+
+            // 計算可見範圍的起始與結束行數 (加上 buffer 避免捲動時留白)
+            const startRow = Math.floor(scrollTop / ROW_HEIGHT);
+            const visibleRows = Math.ceil(containerHeight / ROW_HEIGHT);
+            // 往上下各多算幾行作為緩衝
+            const bufferRows = 5; 
+            
+            let renderStart = Math.max(0, startRow - bufferRows);
+            let renderEnd = Math.min(totalRows, startRow + visibleRows + bufferRows);
+
+            renderRows(renderStart, renderEnd);
+            
+            // 移動內容容器到正確的 Y 軸位置
+            editorContent.style.transform = `translateY(${renderStart * ROW_HEIGHT}px)`;
+        }
+
+        /**
+         * 將指定範圍的資料轉換為 HTML 並寫入 DOM
+         */
+        function renderRows(startRow, endRow) {
+            let html = '';
+            for (let r = startRow; r < endRow; r++) {
+                const offset = r * BYTES_PER_ROW;
+                html += `<div class="flex items-center hover:bg-rgba(47,155,255,0.12) transition-colors" style="height: ${ROW_HEIGHT}px;">`;
+                
+                // 1. 位址 (Address / Offset)
+                html += `<div class="w-24 shrink-0 text-app-brand select-none">${offset.toString(16).padStart(8, '0').toUpperCase()}</div>`;
+                
+                // 2. 十六進制視圖 (Hex View)
+                html += `<div class="flex-1 flex gap-2 ml-4">`;
+                for (let i = 0; i < BYTES_PER_ROW; i++) {
+                    const idx = offset + i;
+                    const extraClass = i === 7 ? 'mr-4' : ''; // 在第8個位元組後加上額外間距，方便閱讀
+                    
+                    if (idx < fileBuffer.length) {
+                        const val = fileBuffer[idx];
+                        const hexStr = val.toString(16).padStart(2, '0').toUpperCase();
+                        
+                        // 判斷是否在選取範圍內
+                        const isSelected = (selStartIdx !== -1 && selEndIdx !== -1) && 
+                                           (idx >= Math.min(selStartIdx, selEndIdx) && idx <= Math.max(selStartIdx, selEndIdx));
+                        
+                        const colorClass = isSelected ? 'bg-app-brand text-app-white' : 'text-app-ink';
+                        
+                        // 點擊可編輯，加入 data-index 以便對應資料
+                        html += `<div class="w-6 text-center hex-cell ${colorClass} hover:text-app-brand-dark cursor-text ${extraClass}" data-index="${idx}" contenteditable="true" spellcheck="false">${hexStr}</div>`;
+                    } else {
+                        // 空白佔位符 (檔案末端不足 16 bytes 時)
+                        html += `<div class="w-6 ${extraClass}"></div>`;
+                    }
+                }
+                html += `</div>`;
+                
+                // 3. ASCII 視圖 (ASCII View)
+                html += `<div class="w-48 shrink-0 pl-4 tracking-widest select-none overflow-hidden whitespace-nowrap">`;
+                for (let i = 0; i < BYTES_PER_ROW; i++) {
+                    const idx = offset + i;
+                    if (idx < fileBuffer.length) {
+                        const val = fileBuffer[idx];
+                        // 判斷是否為可列印字元 (32~126)，否則顯示點 '.'
+                        const char = (val >= 32 && val <= 126) ? String.fromCharCode(val) : '.';
+                        // 處理 HTML 特殊字元跳脫
+                        const safeChar = char.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        
+                        const isSelected = (selStartIdx !== -1 && selEndIdx !== -1) && 
+                                           (idx >= Math.min(selStartIdx, selEndIdx) && idx <= Math.max(selStartIdx, selEndIdx));
+                        const colorClass = isSelected ? 'bg-app-brand text-app-white' : 'text-app-ok';
+                        
+                        html += `<span class="ascii-cell ${colorClass}" data-index="${idx}">${safeChar}</span>`;
+                    }
+                }
+                html += `</div>`;
+                
+                html += `</div>`;
+            }
+            
+            editorContent.innerHTML = html;
+        }
+
+        // --- 編輯功能處理 ---
+
+        /**
+         * 聚焦時全選內容，方便直接輸入替換
+         */
+        function handleCellFocus(e) {
+            if (e.target.classList.contains('hex-cell')) {
+                const range = document.createRange();
+                range.selectNodeContents(e.target);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        /**
+         * 鍵盤事件過濾，只允許輸入十六進制字元
+         */
+        function handleCellKeydown(e) {
+            if (!e.target.classList.contains('hex-cell')) return;
+
+            // 允許的控制鍵
+            const allowedKeys = [
+                'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'
+            ];
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur(); // 按下 Enter 即觸發 blur 進行存檔
+                return;
+            }
+
+            if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) return;
+
+            // 阻擋非十六進制字元
+            if (!/^[0-9a-fA-F]$/.test(e.key)) {
+                e.preventDefault();
+                return;
+            }
+            
+            // 限制長度為 2 (如果沒有選取文字的話)
+            const sel = window.getSelection();
+            if (e.target.innerText.length >= 2 && sel.toString().length === 0) {
+                e.preventDefault();
+            }
+        }
+
+        /**
+         * 失去焦點時，驗證輸入並更新資料陣列與 ASCII 視圖
+         */
+        function handleCellBlur(e) {
+            if (!e.target.classList.contains('hex-cell')) return;
+
+            const el = e.target;
+            const idx = parseInt(el.getAttribute('data-index'), 10);
+            let text = el.innerText.trim();
+
+            // 如果被清空或輸入無效，恢復原狀
+            if (!/^[0-9a-fA-F]{1,2}$/.test(text)) {
+                el.innerText = fileBuffer[idx].toString(16).padStart(2, '0').toUpperCase();
+                return;
+            }
+
+            // 更新 Uint8Array
+            const numValue = parseInt(text, 16);
+            fileBuffer[idx] = numValue;
+
+            // 格式化顯示內容 (確保是2位數大寫)
+            el.innerText = numValue.toString(16).padStart(2, '0').toUpperCase();
+
+            // 同步更新右側 ASCII 顯示
+            const asciiEl = editorContent.querySelector(`.ascii-cell[data-index="${idx}"]`);
+            if (asciiEl) {
+                const char = (numValue >= 32 && numValue <= 126) ? String.fromCharCode(numValue) : '.';
+                asciiEl.innerHTML = char.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+        }
+
+        // --- 拖曳選取功能 ---
+        function handleMouseDown(e) {
+            if (e.target.classList.contains('hex-cell')) {
+                const idx = parseInt(e.target.getAttribute('data-index'), 10);
+                selStartIdx = idx;
+                selEndIdx = idx;
+                isDragging = true;
+                updateSelectionUI();
+            } else {
+                // 點擊非細胞區域取消選取
+                selStartIdx = -1;
+                selEndIdx = -1;
+                updateSelectionUI();
+            }
+        }
+
+        function handleMouseOver(e) {
+            if (isDragging && e.target.classList.contains('hex-cell')) {
+                selEndIdx = parseInt(e.target.getAttribute('data-index'), 10);
+                updateSelectionUI();
+            }
+        }
+
+        function handleMouseUp() {
+            if (isDragging) {
+                isDragging = false;
+                updateActionButtons();
+            }
+        }
+
+        function updateSelectionUI() {
+            if (selStartIdx === -1 || selEndIdx === -1) {
+                // 清除全部選取樣式
+                editorContent.querySelectorAll('.hex-cell').forEach(cell => {
+                    cell.classList.remove('bg-app-brand', 'text-app-white');
+                    cell.classList.add('text-app-ink');
+                });
+                editorContent.querySelectorAll('.ascii-cell').forEach(cell => {
+                    cell.classList.remove('bg-app-brand', 'text-app-white');
+                    cell.classList.add('text-app-ok');
+                });
+                updateActionButtons();
+                return;
+            }
+
+            const start = Math.min(selStartIdx, selEndIdx);
+            const end = Math.max(selStartIdx, selEndIdx);
+            
+            editorContent.querySelectorAll('.hex-cell').forEach(cell => {
+                const idx = parseInt(cell.getAttribute('data-index'), 10);
+                if (idx >= start && idx <= end) {
+                    cell.classList.add('bg-app-brand', 'text-app-white');
+                    cell.classList.remove('text-app-ink');
+                } else {
+                    cell.classList.remove('bg-app-brand', 'text-app-white');
+                    cell.classList.add('text-app-ink');
+                }
+            });
+
+            editorContent.querySelectorAll('.ascii-cell').forEach(cell => {
+                const idx = parseInt(cell.getAttribute('data-index'), 10);
+                if (idx >= start && idx <= end) {
+                    cell.classList.add('bg-app-brand', 'text-app-white');
+                    cell.classList.remove('text-app-ok');
+                } else {
+                    cell.classList.remove('bg-app-brand', 'text-app-white');
+                    cell.classList.add('text-app-ok');
+                }
+            });
+            
+            updateActionButtons();
+        }
+
+        function updateActionButtons() {
+            const hasSelection = (selStartIdx !== -1 && selEndIdx !== -1);
+            if (hasSelection && fileBuffer.length > 0) {
+                btnDelete.classList.remove('hidden');
+                btnDelete.classList.add('flex');
+                btnFill.classList.remove('hidden');
+                btnFill.classList.add('flex');
+            } else {
+                btnDelete.classList.add('hidden');
+                btnDelete.classList.remove('flex');
+                btnFill.classList.add('hidden');
+                btnFill.classList.remove('flex');
+            }
+        }
+
+        // --- 刪除與變更內容功能 ---
+        function deleteSelection() {
+            if (selStartIdx === -1 || selEndIdx === -1) return;
+            
+            const start = Math.min(selStartIdx, selEndIdx);
+            const end = Math.max(selStartIdx, selEndIdx);
+            if (start < 0 || end >= fileBuffer.length) return;
+            
+            const deleteCount = end - start + 1;
+            const newBuffer = new Uint8Array(fileBuffer.length - deleteCount);
+            
+            newBuffer.set(fileBuffer.subarray(0, start), 0);
+            newBuffer.set(fileBuffer.subarray(end + 1), start);
+            
+            fileBuffer = newBuffer;
+            
+            // 重設選取並更新UI
+            selStartIdx = -1;
+            selEndIdx = -1;
+            updateActionButtons();
+            fileInfo.textContent = `檔案: ${fileName} | 大小: ${formatBytes(fileBuffer.length)}`;
+            updateScroll(); 
+        }
+
+        function openFillModal() {
+            if (selStartIdx === -1 || selEndIdx === -1) return;
+            fillModal.classList.remove('hidden');
+            fillModal.classList.add('flex');
+            fillInput.focus();
+            fillInput.select();
+            fillInput.classList.remove('border-red-500'); // 清除先前的錯誤紅框
+        }
+
+        function confirmFill() {
+            const hex = fillInput.value.trim();
+            if (!/^[0-9a-fA-F]{1,2}$/.test(hex)) {
+                fillInput.classList.add('border-danger');
+                return;
+            }
+            
+            const start = Math.min(selStartIdx, selEndIdx);
+            const end = Math.max(selStartIdx, selEndIdx);
+            const numValue = parseInt(hex, 16);
+            
+            for (let i = start; i <= end; i++) {
+                fileBuffer[i] = numValue;
+            }
+            
+            fillModal.classList.add('hidden');
+            fillModal.classList.remove('flex');
+            
+            // 刷新畫面顯示
+            updateScroll();
+        }
+
+        /**
+         * 儲存修改後的檔案並觸發下載
+         */
+        function saveFile() {
+            if (fileBuffer.length === 0) return;
+
+            // 建立 Blob 物件
+            const blob = new Blob([fileBuffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            // 建立隱藏的 a 標籤來觸發下載
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName ? `edited_${fileName}` : 'edited_file.bin';
+            document.body.appendChild(a);
+            a.click();
+            
+            // 清理
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- 工具函式 ---
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
